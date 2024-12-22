@@ -2,7 +2,15 @@
 
 This is the repository for the bookings and reservationg project doing on Trevor Sawler's course "Building Modern Web Applications with Go (Golang)"
 
-- Built in Go version 1.23.3
-- Uses the [chi router](https://github.com/go-chi/chi/v5) 
-- Uses [Alex Edwards SCS](https://github.com/alexedwards/scs/v2) session management 
-- Uses [nosurf](https://github.com/justinas/nosurf) 
+### Technical Stack
+- Built with Go version 1.23.3
+
+### Dependencies
+- [chi router](https://github.com/go-chi/chi/v5) - routing and middleware
+- [Alex Edwards SCS](https://github.com/alexedwards/scs/v2) - session management 
+- [nosurf](https://github.com/justinas/nosurf) - CSRF protection
+
+### UI Components
+- [vanilla JS datepicker](https://github.com/mymth/vanillajs-datepicker/) - date selection
+- [notie](https://github.com/jaredreich/notie) - alerts and notifications
+- [sweet alerts 2](https://sweetalert2.github.io/#download) - pop-up dialogs
