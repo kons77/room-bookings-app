@@ -5,9 +5,10 @@ import (
 	"log"
 	"net/http"
 	"time"
-	"github.com/kons77/room-bookings-app/pkg/config"
-	"github.com/kons77/room-bookings-app/pkg/handlers"
-	"github.com/kons77/room-bookings-app/pkg/render"
+
+	"github.com/kons77/room-bookings-app/internal/config"
+	"github.com/kons77/room-bookings-app/internal/handlers"
+	"github.com/kons77/room-bookings-app/internal/render"
 
 	"github.com/alexedwards/scs/v2"
 )
