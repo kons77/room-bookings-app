@@ -9,6 +9,7 @@ This is the repository for the bookings and reservationg project doing on Trevor
 - [chi router](https://github.com/go-chi/chi/v5) - routing and middleware
 - [Alex Edwards SCS](https://github.com/alexedwards/scs/v2) - session management 
 - [nosurf](https://github.com/justinas/nosurf) - CSRF protection
+- [govalidator](https://github.com/asaskevich/govalidator) - validation data 
 
 ### UI Components
 - [vanilla JS datepicker](https://github.com/mymth/vanillajs-datepicker/) - date selection
