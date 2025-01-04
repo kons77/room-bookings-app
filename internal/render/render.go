@@ -2,6 +2,7 @@ package render
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -12,7 +13,10 @@ import (
 	"github.com/kons77/room-bookings-app/internal/models"
 )
 
+var functions = template.FuncMap{} //holds all of the functions that we want to put into or make available to Goland templates.
+
 var app *config.AppConfig
+var pathToTemplates = "./templates"
 
 // NewTemplates sets the config for the template package
 func NewTemplates(a *config.AppConfig) {
@@ -59,14 +63,14 @@ func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, td *mod
 	}
 }
 
-// It's no longer need to keep track of what files are inside templates folder
-// But still read files form FS every run
+// It's no longer need to keep track of what files are inside templates folder but still read files form FS every run
+// CreateTemplateCache creates a template cache as a map
 func CreateTemplateCache() (map[string]*template.Template, error) {
 	// myCache := make(map[string]*template.Template)
 	myCache := map[string]*template.Template{}
 
 	// get all of the files *.page.tmpl from./templates
-	pages, err := filepath.Glob("./templates/*.page.tmpl")
+	pages, err := filepath.Glob(fmt.Sprintf("%s/*.page.tmpl", pathToTemplates))
 	if err != nil {
 		return myCache, err
 	}
@@ -75,18 +79,19 @@ func CreateTemplateCache() (map[string]*template.Template, error) {
 	for _, page := range pages {
 		// name of the file minus full path to it
 		name := filepath.Base(page)
-		ts, err := template.New(name).ParseFiles(page)
+		// Funcs(function) позволяет добавлять пользовательские функции, которые можно использовать внутри шаблона
+		ts, err := template.New(name).Funcs(functions).ParseFiles(page)
 		if err != nil {
 			return myCache, err
 		}
 
-		matches, err := filepath.Glob("./templates/*.layout.tmpl")
+		matches, err := filepath.Glob(fmt.Sprintf("%s/*.layout.tmpl", pathToTemplates))
 		if err != nil {
 			return myCache, err
 		}
 
 		if len(matches) > 0 {
-			ts, err = ts.ParseGlob("./templates/*.layout.tmpl")
+			ts, err = ts.ParseGlob(fmt.Sprintf("%s/*.layout.tmpl", pathToTemplates))
 			if err != nil {
 				return myCache, err
 			}
