@@ -2,8 +2,8 @@ package render
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"path/filepath"
 	"text/template"
@@ -33,7 +33,7 @@ func AddDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateDa
 }
 
 // RenderTemplate renders a template - old
-func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, td *models.TemplateData) {
+func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, td *models.TemplateData) error {
 
 	var tc map[string]*template.Template
 	if app.UseCache {
@@ -46,7 +46,8 @@ func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, td *mod
 	// get requested template from chache
 	t, ok := tc[tmpl]
 	if !ok {
-		log.Fatal("Could not get template from template cache")
+		//log.Fatal("can't get template from template cache")
+		return errors.New("can't get template from template cache")
 	}
 
 	buf := new(bytes.Buffer)
@@ -59,8 +60,11 @@ func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, td *mod
 	// render the template
 	_, err := buf.WriteTo(w)
 	if err != nil {
-		log.Println("Error writeng template to browser")
+		fmt.Println("Error writeng template to browser", err)
+		return err
 	}
+
+	return nil
 }
 
 // It's no longer need to keep track of what files are inside templates folder but still read files form FS every run
