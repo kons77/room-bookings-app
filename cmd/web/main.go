@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/kons77/room-bookings-app/internal/config"
 	"github.com/kons77/room-bookings-app/internal/handlers"
+	"github.com/kons77/room-bookings-app/internal/helpers"
 	"github.com/kons77/room-bookings-app/internal/models"
 	"github.com/kons77/room-bookings-app/internal/render"
 
@@ -19,6 +21,8 @@ const portNumber = ":8080"
 
 var app config.AppConfig
 var session *scs.SessionManager
+var infoLog *log.Logger
+var errorLog *log.Logger
 
 // main is the main application function
 func main() {
@@ -46,6 +50,12 @@ func run() error {
 	//change this ti true when in production
 	app.InProduction = false
 
+	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	app.InfoLog = infoLog
+
+	errorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	app.ErrorLog = errorLog
+
 	session = scs.New() // := instead of = creates `variable shadowing` because session is declare out of func
 	session.Lifetime = 24 * time.Hour
 	session.Cookie.Persist = true                  // save after closing browser
@@ -65,6 +75,7 @@ func run() error {
 	repo := handlers.NewRepo(&app)
 	handlers.NewHandlers(repo)
 	render.NewTemplates(&app)
+	helpers.NewHelpers(&app)
 
 	return nil
 }
