@@ -1,5 +1,6 @@
 database.yml
 coverage.out
+coverage.out;
 run.sh
 run.bat
 test_all_with_coverage.bat
