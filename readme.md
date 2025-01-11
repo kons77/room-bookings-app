@@ -11,6 +11,7 @@ This is the repository for the bookings and reservationg project doing on Trevor
 - [nosurf](https://github.com/justinas/nosurf) - CSRF protection
 - [govalidator](https://github.com/asaskevich/govalidator) - validation data
 - [Soda CLI](https://gobuffalo.io/documentation/database/soda/) - database migrations
+- [pgx](https://github.com/jackc/pgx) - database connection 
 
 ### UI Components
 - [vanilla JS datepicker](https://github.com/mymth/vanillajs-datepicker/) - date selection
