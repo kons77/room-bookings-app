@@ -2,11 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/kons77/room-bookings-app/internal/config"
 	"github.com/kons77/room-bookings-app/internal/driver"
 	"github.com/kons77/room-bookings-app/internal/forms"
@@ -71,10 +71,10 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// yyyy-mm-dd date format in the web form
-	// 01/02 03:04:05PM '06 -0700  go time format
 	sd := r.Form.Get("start_date")
 	ed := r.Form.Get("end_date")
 
+	// 01/02 03:04:05PM '06 -0700  go time format
 	layout := "2006-01-02" // string describes my date format
 
 	startDate, err := time.Parse(layout, sd)
@@ -166,9 +166,64 @@ func (m *Repository) Availability(w http.ResponseWriter, r *http.Request) {
 func (m *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
 	start := r.Form.Get("start") // name of form input in ""
 	end := r.Form.Get("end")
-	w.Write([]byte(fmt.Sprintf("start date %s is start date is %s", start, end)))
+
+	// 01/02 03:04:05PM '06 -0700  go time format
+	layout := "2006-01-02" // string describes my date format
+	startDate, err := time.Parse(layout, start)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	endDate, err := time.Parse(layout, end)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	rooms, err := m.DB.SearchAvailabilityForAllRooms(startDate, endDate)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	for _, i := range rooms {
+		m.App.InfoLog.Println("ROOM:", i.ID, i.RoomName)
+	}
+
+	if len(rooms) == 0 {
+		// no availability
+		// m.App.InfoLog.Println("No availability")
+		m.App.Session.Put(r.Context(), "error", "No availability")
+		http.Redirect(w, r, "/search-availability", http.StatusSeeOther)
+		return
+	}
+
+	data := make(map[string]interface{})
+	data["rooms"] = rooms
+
+	//images  for rooms
+	roomImages := map[int]string{
+		1: "generals-quarters.png",
+		2: "marjors-suite.png",
+	}
+	data["roomImages"] = roomImages
+
+	// new reservation
+	res := models.Reservation{
+		StartDate: startDate,
+		EndDate:   endDate,
+	}
+
+	// store res wit start and end dates in the session to put to the next page
+	m.App.Session.Put(r.Context(), "reservation", res)
+
+	render.Template(w, r, "choose-room.page.tmpl", &models.TemplateData{
+		Data: data,
+	})
+
 }
 
+// jsonResponse
 type jsonResponse struct {
 	OK      bool   `json:"ok"`
 	Message string `json:"message"`
@@ -196,6 +251,7 @@ func (m *Repository) Contact(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, r, "contact.page.tmpl", &models.TemplateData{})
 }
 
+// ReservationSummary
 func (m *Repository) ReservationSummary(w http.ResponseWriter, r *http.Request) {
 	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
 	if !ok {
@@ -213,4 +269,25 @@ func (m *Repository) ReservationSummary(w http.ResponseWriter, r *http.Request) 
 	render.Template(w, r, "reservation-summary.page.tmpl", &models.TemplateData{
 		Data: data,
 	})
+}
+
+func (m *Repository) ChooseRoom(w http.ResponseWriter, r *http.Request) {
+	roomID, err := strconv.Atoi(chi.URLParam(r, "id")) // Atoi = ASCII to Integer
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	// get that reservation variable I stored in the session
+	res, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
+	if !ok {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	res.RoomId = roomID
+
+	m.App.Session.Put(r.Context(), "reservation", res)
+	http.Redirect(w, r, "/make-reservation", http.StatusSeeOther) // code 303
+
 }
