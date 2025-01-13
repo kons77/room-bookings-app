@@ -29,16 +29,16 @@
     <div class="row">            
 
         {{$rooms := index .Data "rooms" }}
-        {{$roomImages := index .Data "roomImages"}}
+        {{$roomInfo := index .Data "roomInfo"}}
 
         {{range $rooms }}
         <div class="col-md-6 mb-4">
             <a href="/choose-room/{{.ID}}" class="card-link">
                 <div class="card h-100">
-                    <img src="/static/images/{{index $roomImages .ID}}" class="card-img-top" alt="{{.RoomName}}">
+                    <img src="/static/images/{{(index $roomInfo .ID).Image}}" class="card-img-top" alt="{{.RoomName}}">
                     <div class="card-body">
                         <h5 class="card-title">{{.RoomName}}</h5>
-                        <p class="card-text">{{.RoomName}}</p>
+                        <p class="card-text">{{(index $roomInfo .ID).Description}}</p>
                         
                     </div>
                 </div>

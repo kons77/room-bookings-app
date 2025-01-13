@@ -74,15 +74,12 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	sd := r.Form.Get("start_date")
 	ed := r.Form.Get("end_date")
 
-	// 01/02 03:04:05PM '06 -0700  go time format
-	layout := "2006-01-02" // string describes my date format
-
-	startDate, err := time.Parse(layout, sd)
+	startDate, err := parseDate(sd)
 	if err != nil {
 		helpers.ServerError(w, err)
 		return
 	}
-	endDate, err := time.Parse(layout, ed)
+	endDate, err := parseDate(ed) // 	endDate, err := time.Parse(layout, ed)
 	if err != nil {
 		helpers.ServerError(w, err)
 		return
@@ -167,14 +164,12 @@ func (m *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
 	start := r.Form.Get("start") // name of form input in ""
 	end := r.Form.Get("end")
 
-	// 01/02 03:04:05PM '06 -0700  go time format
-	layout := "2006-01-02" // string describes my date format
-	startDate, err := time.Parse(layout, start)
+	startDate, err := parseDate(start)
 	if err != nil {
 		helpers.ServerError(w, err)
 		return
 	}
-	endDate, err := time.Parse(layout, end)
+	endDate, err := parseDate(end)
 	if err != nil {
 		helpers.ServerError(w, err)
 		return
@@ -201,12 +196,21 @@ func (m *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 	data["rooms"] = rooms
 
-	//images  for rooms
-	roomImages := map[int]string{
-		1: "generals-quarters.png",
-		2: "marjors-suite.png",
+	type RoomInfo struct {
+		Image       string
+		Description string
 	}
-	data["roomImages"] = roomImages
+
+	//roomInfo to hold image and description for rooms by roomID - don't want to add this info to db for now
+	roomInfo := map[int]RoomInfo{
+		1: {Image: "generals-quarters.png",
+			Description: "A sanctuary of strength and wisdom, The General's Quarters exudes an air of commanding authority, with its rich mahogany tones and relics of triumph that seem to echo the weight of history. Here, beneath the glow of a steadfast hearth, every detail invites you to reflect upon the grandeur of leadership and the resolve of a steadfast soul.",
+		},
+		2: {Image: "marjors-suite.png",
+			Description: "The Major's Suite is a haven of quiet introspection, where soft twilight hues and the faint scent of aged leather create an atmosphere of serene reverie. This tranquil retreat, adorned with silken drapery and the whispers of forgotten stories, offers rest to those seeking both peace and inspiration.",
+		},
+	}
+	data["roomInfo"] = roomInfo
 
 	// new reservation
 	res := models.Reservation{
@@ -290,4 +294,11 @@ func (m *Repository) ChooseRoom(w http.ResponseWriter, r *http.Request) {
 	m.App.Session.Put(r.Context(), "reservation", res)
 	http.Redirect(w, r, "/make-reservation", http.StatusSeeOther) // code 303
 
+}
+
+// parseDate parses date string using the specified layout
+func parseDate(dateStr string) (time.Time, error) {
+	// 01/02 03:04:05PM '06 -0700  go time format
+	layout := "2006-01-02" // string describes my date format yyyy-mm-dd
+	return time.Parse(layout, dateStr)
 }
