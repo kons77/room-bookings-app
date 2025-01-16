@@ -115,20 +115,74 @@ function Prompt() {
 function checkAvailability(room_id) {
     document.getElementById("check-availability-button").addEventListener("click", function(){    
         
-    const csrfToken = this.getAttribute("data-csrf");
+        const csrfToken = this.getAttribute("data-csrf");
 
-    const html = `
-    <form id="check-availability-form" action="" method="post" novalidate class="needs-validation">            
-        <div class="row" id="reservation-dates-modal">
-            <div class="col">
-                <input disabled required class="form-control" type="text" name="start" id="start" placeholder="Arrival">
+        const html = `
+        <form id="check-availability-form" action="" method="post" novalidate class="needs-validation">            
+            <div class="row" id="reservation-dates-modal">
+                <div class="col">
+                    <input disabled required class="form-control" type="text" name="start" id="start" placeholder="Arrival">
+                </div>
+                <div class="col">
+                    <input disabled required class="form-control" type="text" name="end" id="end" placeholder="Departure">
+                </div>            
             </div>
-            <div class="col">
-                <input disabled required class="form-control" type="text" name="end" id="end" placeholder="Departure">
-            </div>            
-        </div>
-    </form>
-    `
+        </form>
+        `;
+    
+    const handleAvailability = async function(formData) {
+        // await позволяет дождаться ответа, прежде чем продолжить выполнение
+        const response = await fetch("/search-availability-json", {
+            method: "post", 
+            body: formData, 
+        });
+
+        // Ждем преобразования ответа в JSON
+        const data = await response.json();
+        
+        if (data.ok) {
+            const bookingURL = `/book-room?id=${data.room_id}&s=${data.start_date}&e=${data.end_date}`
+            attention.custom({
+                icon: 'success',
+                showConfirmButton: false,
+                msg: `
+                    <p>Rooms is available<p>
+                    <p><a href="${bookingURL}" class="btn btn-primary">Book Now!</a><p>
+                `
+            });
+        } else {
+            attention.error({
+                msg: "No avalability",
+            });
+        };
+    }
+
+    /*      function handleAvailability(formData) {
+        fetch("/search-availability-json", {
+            method: "post", 
+            body: formData,                    
+        })
+            .then(response => response.json())
+            .then(data => {
+                const bookingURL = `/book-room?id=${data.room_id}&s=${data.start_date}&e=${data.end_date}`
+                if (data.ok) {
+                    attention.custom({
+                        icon: 'success',
+                        showConfirmButton: false,
+                        msg: `
+                            <p>Rooms is available<p>
+                            <p><a href="${bookingURL}" class="btn btn-primary">Book Now!</a><p>
+                        `
+                    })
+                } else {
+                    attention.error({
+                        msg: "No avalability",
+                    });
+                    
+                }
+            })
+    } 
+    */
     
     attention.custom({
         msg: html, 
@@ -150,38 +204,13 @@ function checkAvailability(room_id) {
         },
 
         callback: function(result) {
-            console.log("called");
-
-            let form = document.getElementById("check-availability-form");
-            let formData = new FormData(form);
-            formData.append("csrf_token", csrfToken )   // // "{{.CSRFToken}}"
-            formData.append("room_id", room_id)
-
-            fetch("/search-availability-json", {
-                method: "post", 
-                body: formData,                    
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.ok) {
-                        attention.custom({
-                            icon: 'success',
-                            showConfirmButton: false,
-                            msg: '<p>Rooms is available<p>' 
-                                + '<p><a href="/book-room?id='
-                                + data.room_id 
-                                + '&s=' + data.start_date
-                                + '&e=' + data.end_date
-                                + '" class="btn btn-primary">'
-                                + 'Book Now!</a><p>',
-                        })
-                    } else {
-                        attention.error({
-                            msg: "No avalability",
-                        });
-                        
-                    }
-                })
+            if (result) {
+                let form = document.getElementById("check-availability-form");
+                let formData = new FormData(form);
+                formData.append("csrf_token", csrfToken);   // // "{{.CSRFToken}}"
+                formData.append("room_id", room_id);
+                handleAvailability(formData);
+            }
         }
     });
 })

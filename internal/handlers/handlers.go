@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -273,8 +272,6 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println(available)
-
 	resp := jsonResponse{
 		OK:        available,
 		Message:   "",
@@ -289,6 +286,7 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// log.Println(resp, "/n", out)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(out)
 }
