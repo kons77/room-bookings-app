@@ -14,6 +14,7 @@ import (
 	"github.com/kons77/room-bookings-app/internal/helpers"
 	"github.com/kons77/room-bookings-app/internal/models"
 	"github.com/kons77/room-bookings-app/internal/render"
+	"gopkg.in/yaml.v3"
 
 	"github.com/alexedwards/scs/v2"
 )
@@ -24,6 +25,42 @@ var app config.AppConfig
 var session *scs.SessionManager
 var infoLog *log.Logger
 var errorLog *log.Logger
+
+// DBCfgAlt holds database.yml - temp type until db yml cfg move to app.Config
+type DBCfgAlt struct {
+	Development struct {
+		Dialect  string `yaml:"dialect"`
+		Database string `yaml:"database"`
+		User     string `yaml:"user"`
+		Password string `yaml:"password"`
+		Host     string `yaml:"host"`
+		Pool     int    `yaml:"pool"`
+	} `yaml:"development"`
+	/*
+		Test struct {
+			URL string `yaml:"url"`
+		} `yaml:"test"`
+		Production struct {
+			URL string `yaml:"url"`
+		} `yaml:"production"`
+	*/
+}
+
+// getPasswordFromYaml reads password from database.yml - temp fucn until db yml cfg move to app.Config
+func getPasswordFromYaml() (string, error) {
+	data, err := os.ReadFile("database.yml")
+	if err != nil {
+		return "", err
+	}
+
+	var cfg DBCfgAlt
+	err = yaml.Unmarshal(data, &cfg)
+	if err != nil {
+		return "", err
+	}
+
+	return cfg.Development.Password, nil
+}
 
 // main is the main application function
 func main() {
@@ -72,10 +109,11 @@ func run() (*driver.DB, error) {
 	// connect to db
 	log.Println("Connecting to database... ")
 
-	//delete entering password later
-	var pswd string
-	fmt.Println("Enter postgres db password (my standart digits pass without letters)")
-	fmt.Scan(&pswd)
+	pswd, err := getPasswordFromYaml()
+	// log.Println(pswd, err)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	db, err := driver.ConnectSQL("host=localhost port=5432 dbname=bookings user=postgres password=" + pswd)
 	if err != nil {

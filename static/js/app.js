@@ -157,30 +157,30 @@ function checkAvailability(room_id) {
             };
         }
 
-        /*      function handleAvailability(formData) {
-        fetch("/search-availability-json", {
-            method: "post", 
-            body: formData,                    
-        })
-            .then(response => response.json())
-            .then(data => {
-                const bookingURL = `/book-room?id=${data.room_id}&s=${data.start_date}&e=${data.end_date}`
-                if (data.ok) {
-                    attention.custom({
-                        icon: 'success',
-                        showConfirmButton: false,
-                        msg: `
-                            <p>Rooms is available<p>
-                            <p><a href="${bookingURL}" class="btn btn-primary">Book Now!</a><p>
-                        `
-                    })
-                } else {
-                    attention.error({
-                        msg: "No avalability",
-                    });
-                    
-                }
+/*      function handleAvailability(formData) {
+            fetch("/search-availability-json", {
+                method: "post", 
+                body: formData,                    
             })
+                .then(response => response.json())
+                .then(data => {
+                    const bookingURL = `/book-room?id=${data.room_id}&s=${data.start_date}&e=${data.end_date}`
+                    if (data.ok) {
+                        attention.custom({
+                            icon: 'success',
+                            showConfirmButton: false,
+                            msg: `
+                                <p>Rooms is available<p>
+                                <p><a href="${bookingURL}" class="btn btn-primary">Book Now!</a><p>
+                            `
+                        })
+                    } else {
+                        attention.error({
+                            msg: "No avalability",
+                        });
+                        
+                    }
+                })
     } 
     */
     

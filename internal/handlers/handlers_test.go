@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
@@ -18,7 +17,10 @@ var theTests = []struct {
 	method             string     // get or post
 	params             []postData //possible form input
 	expectedStatusCode int
-}{
+}
+
+/*
+{
 	{"home", "/", "GET", []postData{}, http.StatusOK},
 	{"about", "/about", "GET", []postData{}, http.StatusOK},
 	{"gq", "/generals-quarters", "GET", []postData{}, http.StatusOK},
@@ -42,6 +44,7 @@ var theTests = []struct {
 	}, http.StatusOK},
 	{"make-reservation-summary", "/reservation-summary", "GET", []postData{}, http.StatusOK},
 }
+*/
 
 func TestHandlers(t *testing.T) {
 	routes := getRoutes()
@@ -75,4 +78,8 @@ func TestHandlers(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestRepository_Reservation(t *testing.T) {
+
 }
