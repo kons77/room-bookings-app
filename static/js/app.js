@@ -131,13 +131,13 @@ function checkAvailability(room_id) {
         `;
     
     const handleAvailability = async function(formData) {
-        // await позволяет дождаться ответа, прежде чем продолжить выполнение
+        // await pauses execution until the response is received
         const response = await fetch("/search-availability-json", {
             method: "post", 
             body: formData, 
         });
 
-        // Ждем преобразования ответа в JSON
+        // Wait for the response to be converted to JSON
         const data = await response.json();
         
         if (data.ok) {
