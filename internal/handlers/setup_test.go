@@ -20,13 +20,17 @@ import (
 	"github.com/kons77/room-bookings-app/internal/render"
 )
 
+// Global variables for test configuration
 var app config.AppConfig
 var session *scs.SessionManager
 var pathToTemplates = "./../../templates"
 var functions = template.FuncMap{}
 
 // TestMain is part of the testing package available to us in the standard library
+// TestMain is the entry point for testing
+// Sets up all necessary configurations and dependencies
 func TestMain(m *testing.M) {
+	// Register custom types for session storage
 	gob.Register(models.Reservation{})
 
 	// change this to true in production
@@ -54,13 +58,16 @@ func TestMain(m *testing.M) {
 	app.TemplateCache = tc
 	app.UseCache = true
 
+	// Initialize repository and handlers
 	repo := NewTestRepo(&app)
 	NewHandlers(repo)
 	render.NewRenderer(&app)
 
+	// Run tests
 	os.Exit(m.Run())
 }
 
+// getRoutes sets up all application routes for testing
 func getRoutes() http.Handler {
 	mux := chi.NewRouter()
 
@@ -130,6 +137,7 @@ func CreateTestTemplateCache() (map[string]*template.Template, error) {
 			return myCache, err
 		}
 
+		// Get and parse any layout templates
 		matches, err := filepath.Glob(fmt.Sprintf("%s/*.layout.tmpl", pathToTemplates))
 		if err != nil {
 			return myCache, err
