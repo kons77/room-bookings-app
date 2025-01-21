@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -95,7 +97,7 @@ func TestRepository_Reservation(t *testing.T) {
 	ctx := getCtx(req)
 	req = req.WithContext(ctx)
 
-	rr := httptest.NewRecorder() // request recorder
+	rr := httptest.NewRecorder() // response recorder
 	session.Put(ctx, "reservation", reservation)
 
 	handler := http.HandlerFunc(Repo.Reservation)
@@ -132,6 +134,7 @@ func TestRepository_Reservation(t *testing.T) {
 	}
 }
 
+// TestRepository_PostReservation tests the PostReservation handler
 func TestRepository_PostReservation(t *testing.T) {
 	layout := "2006-01-02"
 	sd, _ := time.Parse(layout, "2050-01-01")
@@ -149,14 +152,24 @@ func TestRepository_PostReservation(t *testing.T) {
 	//	reqBody := "start_date=2050-01-01"
 	//	reqBody = fmt.Sprintf("%s&%s", reqBody, "end_date=2050-01-02")  ... and go on
 
+	/* Set и Add имеют разное поведение при работе с параметрами:
+	Add:
+		Добавляет новое значение к существующим значениям для данного ключа
+		Позволяет иметь несколько значений для одного ключа (например, для чекбоксов или мульти-селектов)
+	Set:
+		Заменяет все существующие значения для данного ключа на новое значение
+		Если значение для ключа уже существует, оно будет перезаписано
+	*/
+
 	postedData := url.Values{}
 	postedData.Add("first_name", "John")
 	postedData.Add("last_name", "Joe")
 	postedData.Add("email", "jo@jo.com")
 	postedData.Add("phone", "555-555-5555")
 	postedData.Add("room_id", "1")
+	encodedDate := postedData.Encode()
 
-	req, _ := http.NewRequest("POST", "/make-reservation", strings.NewReader(postedData.Encode()))
+	req, _ := http.NewRequest("POST", "/make-reservation", strings.NewReader(encodedDate))
 	ctx := getCtx(req)
 	req = req.WithContext(ctx)
 
@@ -280,6 +293,48 @@ func TestRepository_PostReservation(t *testing.T) {
 		t.Errorf("PostReservation handler returned wrong response code: got %d, wanted  %d", rr.Code, http.StatusTemporaryRedirect)
 	}
 
+}
+
+func TestRepository_AvailabilityJSON(t *testing.T) {
+
+	// room is not available
+	reqBody := "start=2050-01-01"
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2050-01-02")
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1")
+
+	// create request
+	req, _ := http.NewRequest("POST", "/search-availability-json", strings.NewReader(reqBody)) // Create new HTTP request
+
+	// get context with session
+	ctx := getCtx(req)
+	req = req.WithContext(ctx)
+
+	// set the request header
+	req.Header.Set("Content-Type", "x-www-form-urlencoded")
+
+	// get response recorder
+	rr := httptest.NewRecorder()
+
+	//session.Put(ctx, "", )
+
+	// make handler handlerfunc
+	handler := http.HandlerFunc(Repo.AvailabilityJSON)
+
+	// make request to our handler
+	handler.ServeHTTP(rr, req)
+
+	var j jsonResponse
+	err := json.Unmarshal(rr.Body.Bytes(), &j)
+	if err != nil {
+		t.Error("failed to parse json")
+	}
+
+	// ...........
+
+	// ???
+	if rr.Code != http.StatusOK {
+		t.Errorf("Reservation hendler returned wrong response code: got %d, wanted  %d", rr.Code, http.StatusOK)
+	}
 }
 
 // getCtx creates a context with session support for testing

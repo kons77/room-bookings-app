@@ -5,9 +5,9 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/kons77/room-bookings-app/internal/config"
 	"github.com/kons77/room-bookings-app/internal/driver"
 	"github.com/kons77/room-bookings-app/internal/forms"
@@ -265,6 +265,20 @@ type jsonResponse struct {
 
 // AvailabilityJSON handles request for availability and sends JSON response.
 func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
+	// need to parse request body
+	err := r.ParseForm()
+	if err != nil {
+		// can't parse form, so return appropriate json
+		resp := jsonResponse{
+			OK:      false,
+			Message: "Internal server error",
+		}
+
+		out, _ := json.MarshalIndent(resp, "", "    ")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(out)
+		return
+	}
 
 	sd := r.Form.Get("start")
 	ed := r.Form.Get("end")
@@ -289,7 +303,15 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 
 	available, err := m.DB.SearchAvailabilityByDatesByRoomID(startDate, endDate, roomID)
 	if err != nil {
-		helpers.ServerError(w, err)
+		//
+		resp := jsonResponse{
+			OK:      false,
+			Message: "Error connectint to database",
+		}
+
+		out, _ := json.MarshalIndent(resp, "", "    ")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(out)
 		return
 	}
 
@@ -301,11 +323,8 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 		RoomID:    strconv.Itoa(roomID),
 	}
 
-	out, err := json.MarshalIndent(resp, "", "     ")
-	if err != nil {
-		helpers.ServerError(w, err)
-		return
-	}
+	// removed the error check, since we handle all aspects of the json right here
+	out, _ := json.MarshalIndent(resp, "", "     ")
 
 	// log.Println(resp, "/n", out)
 	w.Header().Set("Content-Type", "application/json")
@@ -347,11 +366,17 @@ func (m *Repository) ReservationSummary(w http.ResponseWriter, r *http.Request) 
 
 // ChooseRoom diaplays list of available rooms
 func (m *Repository) ChooseRoom(w http.ResponseWriter, r *http.Request) {
-	roomID, err := strconv.Atoi(chi.URLParam(r, "id")) // Atoi = ASCII to Integer
+	// changed to this, so we can test it more easily , get rid of  chi.URLParam(r, "id")
+	// split the URL up by /, and grab the 3rd element
+	exploded := strings.Split(r.RequestURI, "/")
+	roomID, err := strconv.Atoi(exploded[2]) // Atoi = ASCII to Integer
 	if err != nil {
-		helpers.ServerError(w, err)
+		m.App.Session.Put(r.Context(), "error", "missing url parameter")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
+
+	// req.RequestURI = "/choose-room/1"  - set it up in the test for ChooseRoom
 
 	// get that reservation variable I stored in the session
 	res, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
@@ -369,7 +394,6 @@ func (m *Repository) ChooseRoom(w http.ResponseWriter, r *http.Request) {
 
 // BookRoom takes URL parameters, builds a sessional variable, and takes user to make res screen
 func (m *Repository) BookRoom(w http.ResponseWriter, r *http.Request) {
-
 	roomID, _ := strconv.Atoi(r.URL.Query().Get("id"))
 	sd := r.URL.Query().Get("s")
 	ed := r.URL.Query().Get("e")
