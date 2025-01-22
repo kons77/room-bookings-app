@@ -185,16 +185,25 @@ func (m *Repository) Availability(w http.ResponseWriter, r *http.Request) {
 
 // PostAvailability renders the availability page
 func (m *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
+	// parsing form for tests, function works fine without it (and many others funcs too)
+	err := r.ParseForm()
+	if err != nil {
+		// helpers.ServerError(w, err)
+		m.App.Session.Put(r.Context(), "error", "can't parse form")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+
 	start := r.Form.Get("start") // name of form input in ""
 	end := r.Form.Get("end")
 
 	startDate, err := parseDate(start)
 	if err != nil {
-		// helpers.ServerError(w, err)
 		m.App.Session.Put(r.Context(), "error", "can't parse start date")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
+
 	endDate, err := parseDate(end)
 	if err != nil {
 		// helpers.ServerError(w, err)
@@ -205,17 +214,17 @@ func (m *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
 
 	rooms, err := m.DB.SearchAvailabilityForAllRooms(startDate, endDate)
 	if err != nil {
-		helpers.ServerError(w, err)
+		m.App.Session.Put(r.Context(), "error", "can't get availability for rooms")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 
-	for _, i := range rooms {
-		m.App.InfoLog.Println("ROOM:", i.ID, i.RoomName)
-	}
+	//	for _, i := range rooms {
+	//		m.App.InfoLog.Println("ROOM:", i.ID, i.RoomName)
+	//	}
 
 	if len(rooms) == 0 {
 		// no availability
-		// m.App.InfoLog.Println("No availability")
 		m.App.Session.Put(r.Context(), "error", "No availability")
 		http.Redirect(w, r, "/search-availability", http.StatusSeeOther)
 		return
@@ -309,7 +318,7 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		resp := jsonResponse{
 			OK:      false,
-			Message: "Error connectint to database",
+			Message: "Error connecting to database",
 		}
 
 		out, _ := json.MarshalIndent(resp, "", "    ")
