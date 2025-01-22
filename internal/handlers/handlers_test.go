@@ -16,8 +16,8 @@ import (
 )
 
 /*
-// postData represents key-value pairs for form input testing
-type postData struct {
+// postedData represents key-value pairs for form input testing
+type postedData struct {
 	key   string
 	value string
 }
@@ -25,7 +25,7 @@ type postData struct {
 
 // theTests contains table-driven test cases for handler testing
 // Currently commented out as we're using different testing approach
-var theTests = []struct {
+var testGET = []struct {
 	name               string // test name
 	url                string //routes path
 	method             string // get or post
@@ -39,21 +39,21 @@ var theTests = []struct {
 	{"contact", "/contact", "GET", http.StatusOK},
 
 	/*
-		{"post-search-avail", "/search-availability", "POST", []postData{
+		{"post-search-avail", "/search-availability", "POST", []postedData{
 			{key: "start", value: "2024-01-01"},
 			{key: "end", value: "2024-01-02"},
 		}, http.StatusOK},
-		{"post-search-avail-json", "/search-availability-json", "POST", []postData{
+		{"post-search-avail-json", "/search-availability-json", "POST", []postedData{
 			{key: "start", value: "2024-01-01"},
 			{key: "end", value: "2024-01-02"},
 		}, http.StatusOK},
-		{"make-reservation-post", "/make-reservation", "POST", []postData{
+		{"make-reservation-post", "/make-reservation", "POST", []postedData{
 			{key: "first_name", value: "Joe"},
 			{key: "last_name", value: "Joyson"},
 			{key: "email", value: "jj@here.com"},
 			{key: "phone", value: "555-555-5555"},
 		}, http.StatusOK},
-		{"make-reservation-summary", "/reservation-summary", "GET", []postData{}, http.StatusOK},
+		{"make-reservation-summary", "/reservation-summary", "GET", []postedData{}, http.StatusOK},
 	*/
 }
 
@@ -65,7 +65,7 @@ func TestHandlers(t *testing.T) {
 	defer ts.Close()                    // defer = close all of this after function is finished
 
 	// Iterate through test cases
-	for _, e := range theTests {
+	for _, e := range testGET {
 		if e.method == "GET" {
 			// Handle GET request tests
 			resp, err := ts.Client().Get(ts.URL + e.url)
@@ -161,6 +161,12 @@ func TestRepository_PostReservation(t *testing.T) {
 		Если значение для ключа уже существует, оно будет перезаписано
 	*/
 
+	/*  also works this way:
+	postedData := url.Values{
+		"first_name": []string{"John"},
+		"last_name": []string{"Joe"},
+	}
+	*/
 	postedData := url.Values{}
 	postedData.Add("first_name", "John")
 	postedData.Add("last_name", "Joe")
@@ -292,25 +298,20 @@ func TestRepository_PostReservation(t *testing.T) {
 	if rr.Code != http.StatusTemporaryRedirect {
 		t.Errorf("PostReservation handler returned wrong response code: got %d, wanted  %d", rr.Code, http.StatusTemporaryRedirect)
 	}
-
 }
 
 func TestRepository_PostAvailability(t *testing.T) {
-	/* room := models.Room{
-		ID:       1,
-		RoomName: "General's Quarters",
-	}*/
 
-	// room is not available
+	// room are NOT  available
+	postedData := url.Values{
+		"start": []string{"2050-01-01"},
+		"end":   []string{"2050-01-02"},
+	}
+	encodedData := postedData.Encode()
 
-	reqBody := "start=2050-01-01"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2050-01-01")
-
-	req, _ := http.NewRequest("POST", "/post-availability", strings.NewReader(reqBody))
+	req, _ := http.NewRequest("POST", "/post-availability", strings.NewReader(encodedData))
 	ctx := getCtx(req)
 	req = req.WithContext(ctx)
-
-	//session.Put(ctx, "room", room)
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
@@ -324,10 +325,13 @@ func TestRepository_PostAvailability(t *testing.T) {
 	}
 
 	// room are available
-	reqBody = "start=2040-01-01"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2040-01-02")
+	postedData = url.Values{
+		"start": []string{"2040-01-01"},
+		"end":   []string{"2040-01-02"},
+	}
+	encodedData = postedData.Encode()
 
-	req, _ = http.NewRequest("POST", "/post-availability", strings.NewReader(reqBody))
+	req, _ = http.NewRequest("POST", "/post-availability", strings.NewReader(encodedData))
 	ctx = getCtx(req)
 	req = req.WithContext(ctx)
 
@@ -343,10 +347,13 @@ func TestRepository_PostAvailability(t *testing.T) {
 	}
 
 	// cannot query to database (start date 2060-01-01)
-	reqBody = "start=2060-01-01"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2060-01-02")
+	postedData = url.Values{
+		"start": []string{"2060-01-01"},
+		"end":   []string{"2060-01-02"},
+	}
+	encodedData = postedData.Encode()
 
-	req, _ = http.NewRequest("POST", "/post-availability", strings.NewReader(reqBody))
+	req, _ = http.NewRequest("POST", "/post-availability", strings.NewReader(encodedData))
 	ctx = getCtx(req)
 	req = req.WithContext(ctx)
 
@@ -362,10 +369,13 @@ func TestRepository_PostAvailability(t *testing.T) {
 	}
 
 	// invalid start date
-	reqBody = "start=ivalid"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2050-01-02")
+	postedData = url.Values{
+		"start": []string{"ivalid"},
+		"end":   []string{"2050-01-02"},
+	}
+	encodedData = postedData.Encode()
 
-	req, _ = http.NewRequest("POST", "/post-availability", strings.NewReader(reqBody))
+	req, _ = http.NewRequest("POST", "/post-availability", strings.NewReader(encodedData))
 	ctx = getCtx(req)
 	req = req.WithContext(ctx)
 
@@ -381,10 +391,13 @@ func TestRepository_PostAvailability(t *testing.T) {
 	}
 
 	// invalid end date
-	reqBody = "start=2050-01-01"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=ivalid")
+	postedData = url.Values{
+		"start": []string{"2050-01-01"},
+		"end":   []string{"ivalid"},
+	}
+	encodedData = postedData.Encode()
 
-	req, _ = http.NewRequest("POST", "/post-availability", strings.NewReader(reqBody))
+	req, _ = http.NewRequest("POST", "/post-availability", strings.NewReader(encodedData))
 	ctx = getCtx(req)
 	req = req.WithContext(ctx)
 

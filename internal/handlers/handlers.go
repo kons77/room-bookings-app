@@ -185,7 +185,8 @@ func (m *Repository) Availability(w http.ResponseWriter, r *http.Request) {
 
 // PostAvailability renders the availability page
 func (m *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
-	// parsing form for tests, function works fine without it (and many others funcs too)
+	// parsing form for tests, function works fine without it (and many others funcs too). need to parse request body
+	
 	err := r.ParseForm()
 	if err != nil {
 		// helpers.ServerError(w, err)
