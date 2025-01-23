@@ -388,11 +388,11 @@ func TestRepository_PostAvailability(t *testing.T) {
 
 func TestRepository_AvailabilityJSON(t *testing.T) {
 	testAvailabilityJSON := []struct {
-		name           string
-		postedData     url.Values
-		expectedStatus int
-		errMessage     string
-		jsonr          jsonResponse
+		name        string
+		postedData  url.Values
+		jsonOK      bool
+		jsonMessage string
+		errMessage  string
 	}{
 		{
 			name: "rooms are available",
@@ -401,8 +401,8 @@ func TestRepository_AvailabilityJSON(t *testing.T) {
 				"end":     []string{"2040-01-02"},
 				"room_id": []string{"1"},
 			},
-			expectedStatus: 0,
-			errMessage:     "",
+
+			errMessage: "",
 		},
 		{
 			name: "rooms are NOT available",
@@ -411,8 +411,8 @@ func TestRepository_AvailabilityJSON(t *testing.T) {
 				"end":     []string{"2050-01-02"},
 				"room_id": []string{"1"},
 			},
-			expectedStatus: 0,
-			errMessage:     "",
+
+			errMessage: "",
 		},
 		{
 			name: "DB Error",
@@ -421,16 +421,80 @@ func TestRepository_AvailabilityJSON(t *testing.T) {
 				"end":     []string{"2060-01-02"},
 				"room_id": []string{"1"},
 			},
-			expectedStatus: 0,
-			errMessage:     "",
+
+			errMessage: "",
 		},
 		{
-			name:           "No request body",
-			postedData:     nil,
-			expectedStatus: 0,
-			errMessage:     "",
+			name:       "No request body",
+			postedData: nil,
+
+			errMessage: "",
 		},
 	}
+
+	testAvailabilityJSON2 := []struct {
+		name           string     //test name
+		postedData     url.Values // req body
+		expectedStatus int
+		errMessage     string
+	}{
+		{
+			name: "invalid start date",
+			postedData: url.Values{
+				"start": []string{"invalid"},
+				"end":   []string{"2050-01-02"},
+				//"room_id": []string{"1"},
+			},
+			expectedStatus: http.StatusTemporaryRedirect,
+			errMessage:     "Post availability with invalid start date gave wrong status code: ",
+		},
+		{
+			name: "invalid end date",
+			postedData: url.Values{
+				"start": []string{"2050-01-01"},
+				"end":   []string{"invalid"},
+				//"room_id": []string{"1"},
+			},
+			expectedStatus: http.StatusTemporaryRedirect,
+			errMessage:     "Post availability with invalid end date gave wrong status code: ",
+		},
+		{
+			name: "invalid room id",
+			postedData: url.Values{
+				"start":   []string{"2050-01-01"},
+				"end":     []string{"2050-01-02"},
+				"room_id": []string{"abc"},
+			},
+			expectedStatus: http.StatusTemporaryRedirect,
+			errMessage:     "Post availability with invalid room id gave wrong status code: ",
+		},
+	}
+
+	for _, e := range testAvailabilityJSON2 {
+		// create new request
+		req, _ := http.NewRequest("POST", "/post-availability", strings.NewReader(e.postedData.Encode()))
+
+		// get context with session
+		ctx := getCtx(req)
+		req = req.WithContext(ctx)
+
+		// set the request header
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+		// get response recorder
+		rr := httptest.NewRecorder()
+
+		// make handler handlerfunc
+		handler := http.HandlerFunc(Repo.AvailabilityJSON)
+
+		// make request to our handler
+		handler.ServeHTTP(rr, req)
+
+		if rr.Code != e.expectedStatus {
+			t.Errorf(e.errMessage+"got %d, wanted  %d", rr.Code, e.expectedStatus)
+		}
+	}
+
 	println(testAvailabilityJSON)
 
 	// room is available
@@ -539,57 +603,59 @@ func TestRepository_AvailabilityJSON(t *testing.T) {
 		t.Errorf("Got availability when request body was empty")
 	}
 
-	// !! the second part of tests
-	// start date is invalid
-	reqBody = "invalid"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2050-01-02")
-	// reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1")
+	/*
+		// !! the second part of tests
+		// start date is invalid
+		reqBody = "invalid"
+		reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2050-01-02")
+		// reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1")
 
-	req, _ = http.NewRequest("POST", "/search-availability-json", strings.NewReader(reqBody))
-	ctx = getCtx(req)
-	req = req.WithContext(ctx)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	rr = httptest.NewRecorder()
-	handler = http.HandlerFunc(Repo.AvailabilityJSON)
-	handler.ServeHTTP(rr, req)
+		req, _ = http.NewRequest("POST", "/search-availability-json", strings.NewReader(reqBody))
+		ctx = getCtx(req)
+		req = req.WithContext(ctx)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		rr = httptest.NewRecorder()
+		handler = http.HandlerFunc(Repo.AvailabilityJSON)
+		handler.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusTemporaryRedirect {
-		t.Errorf("Post availability with invalid start date returned wrong response code: got %d, wanted  %d", rr.Code, http.StatusTemporaryRedirect)
-	}
+		if rr.Code != http.StatusTemporaryRedirect {
+			t.Errorf("Post availability with invalid start date returned wrong response code: got %d, wanted  %d", rr.Code, http.StatusTemporaryRedirect)
+		}
 
-	// end date is invalid
-	reqBody = "start=2050-01-02"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=invalid")
-	// reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1")
+		// end date is invalid
+		reqBody = "start=2050-01-02"
+		reqBody = fmt.Sprintf("%s&%s", reqBody, "end=invalid")
+		// reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1")
 
-	req, _ = http.NewRequest("POST", "/search-availability-json", strings.NewReader(reqBody))
-	ctx = getCtx(req)
-	req = req.WithContext(ctx)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	rr = httptest.NewRecorder()
-	handler = http.HandlerFunc(Repo.AvailabilityJSON)
-	handler.ServeHTTP(rr, req)
+		req, _ = http.NewRequest("POST", "/search-availability-json", strings.NewReader(reqBody))
+		ctx = getCtx(req)
+		req = req.WithContext(ctx)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		rr = httptest.NewRecorder()
+		handler = http.HandlerFunc(Repo.AvailabilityJSON)
+		handler.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusTemporaryRedirect {
-		t.Errorf("Post availability with invalid end date returned wrong response code: got %d, wanted  %d", rr.Code, http.StatusTemporaryRedirect)
-	}
+		if rr.Code != http.StatusTemporaryRedirect {
+			t.Errorf("Post availability with invalid end date returned wrong response code: got %d, wanted  %d", rr.Code, http.StatusTemporaryRedirect)
+		}
 
-	// room_id is invalid
-	reqBody = "start=2040-01-01"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2040-01-02")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=abc")
+		// room_id is invalid
+		reqBody = "start=2040-01-01"
+		reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2040-01-02")
+		reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=abc")
 
-	req, _ = http.NewRequest("POST", "/search-availability-json", strings.NewReader(reqBody))
-	ctx = getCtx(req)
-	req = req.WithContext(ctx)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	rr = httptest.NewRecorder()
-	handler = http.HandlerFunc(Repo.AvailabilityJSON)
-	handler.ServeHTTP(rr, req)
+		req, _ = http.NewRequest("POST", "/search-availability-json", strings.NewReader(reqBody))
+		ctx = getCtx(req)
+		req = req.WithContext(ctx)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		rr = httptest.NewRecorder()
+		handler = http.HandlerFunc(Repo.AvailabilityJSON)
+		handler.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusTemporaryRedirect {
-		t.Errorf("Post availability with invalid rood id returned wrong response code: got %d, wanted  %d", rr.Code, http.StatusTemporaryRedirect)
-	}
+		if rr.Code != http.StatusTemporaryRedirect {
+			t.Errorf("Post availability with invalid rood id returned wrong response code: got %d, wanted  %d", rr.Code, http.StatusTemporaryRedirect)
+		}
+	*/
 
 }
 
