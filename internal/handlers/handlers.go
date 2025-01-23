@@ -186,7 +186,7 @@ func (m *Repository) Availability(w http.ResponseWriter, r *http.Request) {
 // PostAvailability renders the availability page
 func (m *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
 	// parsing form for tests, function works fine without it (and many others funcs too). need to parse request body
-	
+
 	err := r.ParseForm()
 	if err != nil {
 		// helpers.ServerError(w, err)
@@ -319,7 +319,7 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		resp := jsonResponse{
 			OK:      false,
-			Message: "Error connecting to database",
+			Message: "Error querying database",
 		}
 
 		out, _ := json.MarshalIndent(resp, "", "    ")

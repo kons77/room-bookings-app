@@ -387,9 +387,55 @@ func TestRepository_PostAvailability(t *testing.T) {
 }
 
 func TestRepository_AvailabilityJSON(t *testing.T) {
+	testAvailabilityJSON := []struct {
+		name           string
+		postedData     url.Values
+		expectedStatus int
+		errMessage     string
+		jsonr          jsonResponse
+	}{
+		{
+			name: "rooms are available",
+			postedData: url.Values{
+				"start":   []string{"2040-01-01"},
+				"end":     []string{"2040-01-02"},
+				"room_id": []string{"1"},
+			},
+			expectedStatus: 0,
+			errMessage:     "",
+		},
+		{
+			name: "rooms are NOT available",
+			postedData: url.Values{
+				"start":   []string{"2050-01-01"},
+				"end":     []string{"2050-01-02"},
+				"room_id": []string{"1"},
+			},
+			expectedStatus: 0,
+			errMessage:     "",
+		},
+		{
+			name: "DB Error",
+			postedData: url.Values{
+				"start":   []string{"2060-01-01"},
+				"end":     []string{"2060-01-02"},
+				"room_id": []string{"1"},
+			},
+			expectedStatus: 0,
+			errMessage:     "",
+		},
+		{
+			name:           "No request body",
+			postedData:     nil,
+			expectedStatus: 0,
+			errMessage:     "",
+		},
+	}
+	println(testAvailabilityJSON)
+
 	// room is available
 	reqBody := "start=2040-01-01"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2050-01-02")
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2040-01-02")
 	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1")
 
 	// create new request
@@ -418,14 +464,14 @@ func TestRepository_AvailabilityJSON(t *testing.T) {
 		t.Error("failed to parse json")
 	}
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("PostAvailability gave wrong code when rooms are available: got %d, wanted  %d", rr.Code, http.StatusOK)
+	if !j.OK {
+		t.Error("Got no availability when some was expected in AvailabilityJSON")
 	}
 
 	// room is not available
 	reqBody = "start=2050-01-01"
 	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2050-01-02")
-	// reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1")
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1")
 
 	req, _ = http.NewRequest("POST", "/search-availability-json", strings.NewReader(reqBody))
 	ctx = getCtx(req)
@@ -435,10 +481,65 @@ func TestRepository_AvailabilityJSON(t *testing.T) {
 	handler = http.HandlerFunc(Repo.AvailabilityJSON)
 	handler.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusTemporaryRedirect {
-		t.Errorf("PostAvailability gave wrong code when NO rooms are available: got %d, wanted  %d", rr.Code, http.StatusTemporaryRedirect)
+	err = json.Unmarshal(rr.Body.Bytes(), &j)
+	if err != nil {
+		log.Println(err)
+		t.Error("failed to parse json")
 	}
 
+	if j.OK {
+		t.Error("Got availability when none was expected in AvailabilityJSON")
+	}
+
+	// canot connectn to db
+	// this time, we specify a start date of 2060-01-01, which will cause our testdb repo to return an error
+	reqBody = "start=2060-01-01"
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2060-02-02")
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1")
+
+	req, _ = http.NewRequest("POST", "/search-availability-json", strings.NewReader(reqBody))
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.AvailabilityJSON)
+	handler.ServeHTTP(rr, req)
+
+	// get StatusOK because of getting json
+	if rr.Code != http.StatusOK {
+		t.Errorf("Post availability when database query fails returned wrong status code: got %d, wanted  %d", rr.Code, http.StatusOK)
+	}
+
+	err = json.Unmarshal(rr.Body.Bytes(), &j)
+	if err != nil {
+		t.Error("failed to parse json")
+	}
+
+	// json OK = false because of db error
+	if j.OK || j.Message != "Error querying database" {
+		t.Errorf("Got true for OK when database error occurred")
+	}
+
+	// empty post body = inapropriate json
+	req, _ = http.NewRequest("POST", "/search-availability-json", nil)
+	ctx = getCtx(req)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	handler = http.HandlerFunc(Repo.AvailabilityJSON)
+	handler.ServeHTTP(rr, req)
+
+	err = json.Unmarshal(rr.Body.Bytes(), &j)
+	if err != nil {
+		t.Error("failed to parse json")
+	}
+
+	// json OK = false because of db error
+	if j.OK || j.Message != "Internal server error" {
+		t.Errorf("Got availability when request body was empty")
+	}
+
+	// !! the second part of tests
 	// start date is invalid
 	reqBody = "invalid"
 	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2050-01-02")
@@ -473,11 +574,10 @@ func TestRepository_AvailabilityJSON(t *testing.T) {
 		t.Errorf("Post availability with invalid end date returned wrong response code: got %d, wanted  %d", rr.Code, http.StatusTemporaryRedirect)
 	}
 
-	// canot connectn to db
-	// this time, we specify a start date of 2060-01-01, which will cause our testdb repo to return an error
-	reqBody = "start=2060-01-01"
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2060-02-02")
-	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=1")
+	// room_id is invalid
+	reqBody = "start=2040-01-01"
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "end=2040-01-02")
+	reqBody = fmt.Sprintf("%s&%s", reqBody, "room_id=abc")
 
 	req, _ = http.NewRequest("POST", "/search-availability-json", strings.NewReader(reqBody))
 	ctx = getCtx(req)
@@ -487,32 +587,8 @@ func TestRepository_AvailabilityJSON(t *testing.T) {
 	handler = http.HandlerFunc(Repo.AvailabilityJSON)
 	handler.ServeHTTP(rr, req)
 
-	// get StatusOK because of getting json
-	if rr.Code != http.StatusOK {
-		t.Errorf("Post availability when database query fails returned wrong status code: got %d, wanted  %d", rr.Code, http.StatusOK)
-	}
-
-	err = json.Unmarshal(rr.Body.Bytes(), &j)
-	if err != nil {
-		t.Error("failed to parse json")
-	}
-
-	// json OK = false because of db error
-	if j.OK != false {
-		t.Errorf("Got true for OK when database error occurred")
-	}
-
-	// empty post body = inapropriate json
-	req, _ = http.NewRequest("POST", "/search-availability-json", nil)
-	ctx = getCtx(req)
-	req = req.WithContext(ctx)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	rr = httptest.NewRecorder()
-	handler = http.HandlerFunc(Repo.AvailabilityJSON)
-	handler.ServeHTTP(rr, req)
-
-	if rr.Code != http.StatusOK {
-		t.Errorf("Post availability with empty request body (nil) gave wrong status code: got %d, wanted  %d", rr.Code, http.StatusOK)
+	if rr.Code != http.StatusTemporaryRedirect {
+		t.Errorf("Post availability with invalid rood id returned wrong response code: got %d, wanted  %d", rr.Code, http.StatusTemporaryRedirect)
 	}
 
 }
