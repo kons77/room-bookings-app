@@ -11,7 +11,6 @@ import (
 	"github.com/kons77/room-bookings-app/internal/config"
 	"github.com/kons77/room-bookings-app/internal/driver"
 	"github.com/kons77/room-bookings-app/internal/forms"
-	"github.com/kons77/room-bookings-app/internal/helpers"
 	"github.com/kons77/room-bookings-app/internal/models"
 	"github.com/kons77/room-bookings-app/internal/render"
 	"github.com/kons77/room-bookings-app/internal/repository"
@@ -344,7 +343,7 @@ func (m *Repository) Contact(w http.ResponseWriter, r *http.Request) {
 func (m *Repository) ReservationSummary(w http.ResponseWriter, r *http.Request) {
 	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
 	if !ok {
-		m.App.ErrorLog.Println("cannot get item from session")
+		// m.App.ErrorLog.Println("cannot get item from session")
 		m.App.Session.Put(r.Context(), "error", "Can't get reservation from session")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
@@ -380,12 +379,11 @@ func (m *Repository) ChooseRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// req.RequestURI = "/choose-room/1"  - set it up in the test for ChooseRoom
-
 	// get that reservation variable I stored in the session
 	res, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
 	if !ok {
-		helpers.ServerError(w, err)
+		m.App.Session.Put(r.Context(), "error", "can't get session")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -402,21 +400,24 @@ func (m *Repository) BookRoom(w http.ResponseWriter, r *http.Request) {
 	sd := r.URL.Query().Get("s")
 	ed := r.URL.Query().Get("e")
 
-	StartDate, err := parseDate(sd)
-	if err != nil {
-		helpers.ServerError(w, err)
+	StartDate, _ := parseDate(sd)
+	/* if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't get session")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
-	}
+	}*/
 
-	EndDate, err := parseDate(ed)
-	if err != nil {
-		helpers.ServerError(w, err)
+	EndDate, _ := parseDate(ed)
+	/* if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can't get session")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
-	}
+	}*/
 
 	room, err := m.DB.GetRoomByID(roomID)
 	if err != nil {
-		helpers.ServerError(w, err)
+		m.App.Session.Put(r.Context(), "error", "can't get room from db")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 

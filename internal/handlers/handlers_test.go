@@ -8,20 +8,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/kons77/room-bookings-app/internal/driver"
 	"github.com/kons77/room-bookings-app/internal/models"
 )
-
-/*
-// postedData represents key-value pairs for form input testing
-type postedData struct {
-	key   string
-	value string
-}
-*/
 
 // theTests contains table-driven test cases for handler testing
 // Currently commented out as we're using different testing approach
@@ -149,12 +143,6 @@ func TestRepository_PostReservation(t *testing.T) {
 		},
 	}
 
-	/*  also works this way:
-	postedData := url.Values{
-		"first_name": []string{"John"},
-		"last_name": []string{"Joe"},
-	}
-	*/
 	postedData := url.Values{
 		"first_name": []string{"John"},
 		"last_name":  []string{"Joe"},
@@ -475,7 +463,7 @@ func TestRepository_AvailabilityJSON(t *testing.T) {
 			}
 
 			// create new request
-			req, _ := http.NewRequest("POST", "/post-availability", data)
+			req, _ := http.NewRequest("POST", "/search-availability-json", data)
 
 			// get context with session
 			ctx := getCtx(req)
@@ -508,7 +496,220 @@ func TestRepository_AvailabilityJSON(t *testing.T) {
 }
 
 func TestRepository_ChooseRoom(t *testing.T) {
+	//  set it up in the test for ChooseRoom
+	// req.RequestURI = "/choose-room/1"
+	testChooseRoom := []struct {
+		name           string //test name
+		expectedStatus int
+		errMessage     string
+		resrv          models.Reservation
+		resInSession   bool
+		urlParam       string
+	}{
+		{
+			name:           "There's a reservation IN the session",
+			expectedStatus: http.StatusSeeOther,
+			errMessage:     "cannot get reservation from the session but it must be in: ",
+			resrv: models.Reservation{
+				RoomID: 1,
+				Room: models.Room{
+					ID:       1,
+					RoomName: "General's Quarters",
+				},
+			},
+			resInSession: true,
+			urlParam:     "/choose-room/1",
+		},
+		{
+			name:           "There's NO reservation in the session",
+			expectedStatus: http.StatusTemporaryRedirect,
+			errMessage:     "get reservation from the session while it's not there: ",
+			resInSession:   false,
+			urlParam:       "/choose-room/1",
+		},
+		{
+			name:           "Wrong URL parameter",
+			expectedStatus: http.StatusTemporaryRedirect,
+			errMessage:     "wrong URL parameter: ",
+			resrv: models.Reservation{
+				RoomID: 1,
+				Room: models.Room{
+					ID:       1,
+					RoomName: "General's Quarters",
+				},
+			},
+			resInSession: true,
+			urlParam:     "/choose-room/hello",
+		},
+	}
 
+	for _, tc := range testChooseRoom {
+		t.Run(tc.name, func(t *testing.T) {
+			// create new request
+			req, _ := http.NewRequest("GET", "/choose-room/1", nil)
+
+			// get context with session
+			ctx := getCtx(req)
+			req = req.WithContext(ctx)
+			req.RequestURI = tc.urlParam
+
+			if tc.resInSession {
+				session.Put(ctx, "reservation", tc.resrv)
+			}
+
+			// set the request header
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+			// get response recorder
+			rr := httptest.NewRecorder()
+
+			// make handler handlerfunc
+			handler := http.HandlerFunc(Repo.ChooseRoom)
+
+			// make request to our handler
+			handler.ServeHTTP(rr, req)
+
+			if rr.Code != tc.expectedStatus {
+				t.Errorf(tc.errMessage+"got %d, wanted  %d", rr.Code, tc.expectedStatus)
+			}
+		})
+	}
+}
+
+func TestRepository_BookRoom(t *testing.T) {
+	testBookRoom := []struct {
+		name           string //test name
+		expectedStatus int
+		errMessage     string
+		resrv          models.Reservation
+		resInSession   bool
+		urlParam       string
+	}{
+		{
+			name:           "database works",
+			expectedStatus: http.StatusSeeOther,
+			errMessage:     "BookRoom handler returned wrong response code: ",
+			resrv: models.Reservation{
+				RoomID: 1,
+				Room: models.Room{
+					ID:       1,
+					RoomName: "General's Quarters",
+				},
+			},
+			resInSession: true,
+			urlParam:     "/book-room/?s=2040-01-01&e=2040-01-02&id=1",
+		},
+		{
+			name:           "database fails",
+			expectedStatus: http.StatusTemporaryRedirect,
+			errMessage:     "BookRoom handler returned wrong response code: ",
+			resInSession:   false,
+			urlParam:       "/book-room/?s=2040-01-01&e=2040-01-02&id=4",
+		},
+	}
+
+	for _, tc := range testBookRoom {
+		t.Run(tc.name, func(t *testing.T) {
+			url := tc.urlParam
+			// create new request
+			req, _ := http.NewRequest("GET", url, nil)
+
+			// get context with session
+			ctx := getCtx(req)
+			req = req.WithContext(ctx)
+			req.RequestURI = tc.urlParam
+
+			if tc.resInSession {
+				session.Put(ctx, "reservation", tc.resrv)
+			}
+
+			// set the request header
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+			// get response recorder
+			rr := httptest.NewRecorder()
+
+			// make handler handlerfunc
+			handler := http.HandlerFunc(Repo.BookRoom)
+
+			// make request to our handler
+			handler.ServeHTTP(rr, req)
+
+			if rr.Code != tc.expectedStatus {
+				t.Errorf(tc.errMessage+"got %d, wanted  %d", rr.Code, tc.expectedStatus)
+			}
+		})
+	}
+}
+
+func TestRepository_ReservationSummary(t *testing.T) {
+	testReservationSummary := []struct {
+		name           string //test name
+		expectedStatus int
+		errMessage     string
+		resrv          models.Reservation
+		resInSession   bool
+	}{
+		{
+			name:           "There's NO reservation in the session",
+			expectedStatus: http.StatusTemporaryRedirect,
+			errMessage:     "get reservation from the session while it's not there: ",
+			resInSession:   false,
+		},
+		{
+			name:           "There's a reservation IN the session",
+			expectedStatus: http.StatusOK,
+			errMessage:     "cannot get reservation from the session but it must be in: ",
+			resrv: models.Reservation{
+				RoomID: 1,
+				Room: models.Room{
+					ID:       1,
+					RoomName: "General's Quarters",
+				},
+			},
+			resInSession: true,
+		},
+	}
+
+	for _, tc := range testReservationSummary {
+		t.Run(tc.name, func(t *testing.T) {
+			// create new request
+			req, _ := http.NewRequest("POST", "/reservation-summary", nil)
+
+			// get context with session
+			ctx := getCtx(req)
+			req = req.WithContext(ctx)
+
+			if tc.resInSession {
+				session.Put(ctx, "reservation", tc.resrv)
+			}
+
+			// set the request header
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+			// get response recorder
+			rr := httptest.NewRecorder()
+
+			// make handler handlerfunc
+			handler := http.HandlerFunc(Repo.ReservationSummary)
+
+			// make request to our handler
+			handler.ServeHTTP(rr, req)
+
+			if rr.Code != tc.expectedStatus {
+				t.Errorf(tc.errMessage+"got %d, wanted  %d", rr.Code, tc.expectedStatus)
+			}
+		})
+	}
+}
+
+func TestNewRepo(t *testing.T) {
+	var db driver.DB
+	testRepo := NewRepo(&app, &db)
+
+	if reflect.TypeOf(testRepo).String() != "*handlers.Repository" {
+		t.Errorf("Did not get correct type from NewRepo: got %s, wanted *Repository", reflect.TypeOf(testRepo).String())
+	}
 }
 
 // getCtx creates a context with session support for testing

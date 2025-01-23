@@ -1,6 +1,7 @@
 # Bookings and Reservations 
 
 This is the repository for the bookings and reservationg project doing on Trevor Sawler's course "Building Modern Web Applications with Go (Golang)"
+(go-modern-web-app) 
 
 ### Technical Stack
 - Built with Go version 1.23.3
