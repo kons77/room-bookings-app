@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -274,20 +273,23 @@ type jsonResponse struct {
 	EndDate   string `json:"end_date"`
 }
 
+// Helper function to send JSON error response
+func sendJSONError(w http.ResponseWriter, message string) {
+	resp := jsonResponse{
+		OK:      false,
+		Message: message,
+	}
+
+	out, _ := json.MarshalIndent(resp, "", "    ")
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
+}
+
 // AvailabilityJSON handles request for availability and sends JSON response.
 func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 	// need to parse request body
-	err := r.ParseForm()
-	if err != nil {
-		// can't parse form, so return appropriate json
-		resp := jsonResponse{
-			OK:      false,
-			Message: "Internal server error",
-		}
-
-		out, _ := json.MarshalIndent(resp, "", "    ")
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(out)
+	if err := r.ParseForm(); err != nil {
+		sendJSONError(w, "internal server error")
 		return
 	}
 
@@ -296,38 +298,29 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 
 	startDate, err := parseDate(sd)
 	if err != nil {
-		m.App.Session.Put(r.Context(), "error", "can't parse start date")
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		sendJSONError(w, "invalid start date")
 		return
 	}
 
 	endDate, err := parseDate(ed)
 	if err != nil {
-		m.App.Session.Put(r.Context(), "error", "can't parse end date")
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		sendJSONError(w, "invalid end date")
 		return
 	}
 
 	roomID, err := strconv.Atoi(r.Form.Get("room_id"))
 	if err != nil {
-		m.App.Session.Put(r.Context(), "error", fmt.Sprintf("can't process room id, %s", err))
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		sendJSONError(w, "invalid room id")
 		return
 	}
 
 	available, err := m.DB.SearchAvailabilityByDatesByRoomID(startDate, endDate, roomID)
 	if err != nil {
-		resp := jsonResponse{
-			OK:      false,
-			Message: "Error querying database",
-		}
-
-		out, _ := json.MarshalIndent(resp, "", "    ")
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(out)
+		sendJSONError(w, "error querying database")
 		return
 	}
 
+	// Prepare and send successful response
 	resp := jsonResponse{
 		OK:        available,
 		Message:   "",
@@ -338,8 +331,6 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 
 	// removed the error check, since we handle all aspects of the json right here
 	out, _ := json.MarshalIndent(resp, "", "     ")
-
-	// log.Println(resp, "/n", out)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(out)
 }
