@@ -70,6 +70,11 @@ func main() {
 	}
 	defer db.SQL.Close() // connection won't be closed until the main function itself stops running
 
+	defer close(app.MailChan)
+
+	fmt.Println("Starting mail listener...")
+	listenForMail()
+
 	fmt.Printf("Starting application on port %s \n", portNumber)
 
 	srv := &http.Server{
@@ -88,6 +93,9 @@ func run() (*driver.DB, error) {
 	gob.Register(models.User{})
 	gob.Register(models.Room{})
 	gob.Register(models.Restriction{})
+
+	mailChan := make(chan models.MailData)
+	app.MailChan = mailChan
 
 	//change this ti true when in production
 	app.InProduction = false
@@ -137,3 +145,21 @@ func run() (*driver.DB, error) {
 
 	return db, nil
 }
+
+/* send_email_standard sends email using standart go library package - we do not use it
+func send_email_standart() {
+	from := "me@here.com"
+	pswd := ""
+	mailserver := "localhost"
+	where := []string{
+		"you@there.com",
+	}
+	msgContent := []byte("Hello, world")
+
+	// credentials of mailserver
+	auth := smtp.PlainAuth("", from, pswd, mailserver)
+	err := smtp.SendMail("localhost:1025", auth, from, where, msgContent)
+	if err != nil {
+		log.Println("somethings goes wrong", err)
+	}
+}*/
