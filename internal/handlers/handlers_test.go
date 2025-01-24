@@ -159,13 +159,13 @@ func TestRepository_PostReservation(t *testing.T) {
 		{
 			name: "everytnig is ok",
 			postedData: url.Values{
-				"start":      []string{"2040-01-01"},
-				"end":        []string{"2040-01-02"},
-				"first_name": []string{"John"},
-				"last_name":  []string{"Joe"},
-				"email":      []string{"jo@jo.com"},
-				"phone":      []string{"555-555-5555"},
-				"room_id":    []string{"1"},
+				"start":      {"2040-01-01"},
+				"end":        {"2040-01-02"},
+				"first_name": {"John"},
+				"last_name":  {"Joe"},
+				"email":      {"jo@jo.com"},
+				"phone":      {"555-555-5555"},
+				"room_id":    {"1"},
 			},
 			resrv: models.Reservation{
 				RoomID: 1,
@@ -190,10 +190,10 @@ func TestRepository_PostReservation(t *testing.T) {
 		{
 			name: "invalid form",
 			postedData: url.Values{
-				"first_name": []string{"a"},
-				"last_name":  []string{"b"},
-				"email":      []string{"c@jo.com"},
-				"room_id":    []string{"1"},
+				"first_name": {"a"},
+				"last_name":  {"b"},
+				"email":      {"c@jo.com"},
+				"room_id":    {"1"},
 			},
 			resrv: models.Reservation{
 				RoomID: 1,
@@ -215,13 +215,13 @@ func TestRepository_PostReservation(t *testing.T) {
 		{
 			name: "failure to insert reservation into db",
 			postedData: url.Values{
-				"start":      []string{"2040-01-01"},
-				"end":        []string{"2040-01-02"},
-				"first_name": []string{"John"},
-				"last_name":  []string{"Joe"},
-				"email":      []string{"jo@jo.com"},
-				"phone":      []string{"555-555-5555"},
-				"room_id":    []string{"2"},
+				"start":      {"2040-01-01"},
+				"end":        {"2040-01-02"},
+				"first_name": {"John"},
+				"last_name":  {"Joe"},
+				"email":      {"jo@jo.com"},
+				"phone":      {"555-555-5555"},
+				"room_id":    {"2"},
 			},
 			resrv: models.Reservation{
 				RoomID: 2,
@@ -237,13 +237,13 @@ func TestRepository_PostReservation(t *testing.T) {
 		{
 			name: "failure to insert  room restrictions into db",
 			postedData: url.Values{
-				"start":      []string{"2040-01-01"},
-				"end":        []string{"2040-01-02"},
-				"first_name": []string{"John"},
-				"last_name":  []string{"Joe"},
-				"email":      []string{"jo@jo.com"},
-				"phone":      []string{"555-555-5555"},
-				"room_id":    []string{"1000"},
+				"start":      {"2040-01-01"},
+				"end":        {"2040-01-02"},
+				"first_name": {"John"},
+				"last_name":  {"Joe"},
+				"email":      {"jo@jo.com"},
+				"phone":      {"555-555-5555"},
+				"room_id":    {"1000"},
 			},
 			resrv: models.Reservation{
 				RoomID: 1000,
@@ -301,8 +301,8 @@ func TestRepository_PostAvailability(t *testing.T) {
 		{
 			name: "room is available",
 			postedData: url.Values{
-				"start": []string{"2040-01-01"},
-				"end":   []string{"2040-01-02"},
+				"start": {"2040-01-01"},
+				"end":   {"2040-01-02"},
 			},
 			expectedStatus: http.StatusOK,
 			errMessage:     "Post availability when rooms ARE  available returned wrong response code",
@@ -310,8 +310,8 @@ func TestRepository_PostAvailability(t *testing.T) {
 		{
 			name: "room is NOT available",
 			postedData: url.Values{
-				"start": []string{"2050-01-01"},
-				"end":   []string{"2050-01-02"},
+				"start": {"2050-01-01"},
+				"end":   {"2050-01-02"},
 			},
 			expectedStatus: http.StatusSeeOther,
 			errMessage:     "Post availability when NO rooms available returned wrong response code: ",
@@ -319,8 +319,8 @@ func TestRepository_PostAvailability(t *testing.T) {
 		{
 			name: "cannot query database",
 			postedData: url.Values{
-				"start": []string{"2060-01-01"},
-				"end":   []string{"2060-01-02"},
+				"start": {"2060-01-01"},
+				"end":   {"2060-01-02"},
 			},
 			expectedStatus: http.StatusTemporaryRedirect,
 			errMessage:     "Post availability when database query fails gave wrong status code: ",
@@ -328,8 +328,8 @@ func TestRepository_PostAvailability(t *testing.T) {
 		{
 			name: "invalid start date",
 			postedData: url.Values{
-				"start": []string{"invalid"},
-				"end":   []string{"2060-01-02"},
+				"start": {"invalid"},
+				"end":   {"2060-01-02"},
 			},
 			expectedStatus: http.StatusTemporaryRedirect,
 			errMessage:     "Post availability with invalid start date gave wrong status code: ",
@@ -337,8 +337,8 @@ func TestRepository_PostAvailability(t *testing.T) {
 		{
 			name: "invalid end date",
 			postedData: url.Values{
-				"start": []string{"2060-01-01"},
-				"end":   []string{"invalid"},
+				"start": {"2060-01-01"},
+				"end":   {"invalid"},
 			},
 			expectedStatus: http.StatusTemporaryRedirect,
 			errMessage:     "Post availability with invalid end date gave wrong status code: ",
@@ -394,9 +394,9 @@ func TestRepository_AvailabilityJSON(t *testing.T) {
 		{
 			name: "rooms are available",
 			postedData: url.Values{
-				"start":   []string{"2040-01-01"},
-				"end":     []string{"2040-01-02"},
-				"room_id": []string{"1"},
+				"start":   {"2040-01-01"},
+				"end":     {"2040-01-02"},
+				"room_id": {"1"},
 			},
 			jsonOK:      true,
 			jsonMessage: "",
@@ -405,9 +405,9 @@ func TestRepository_AvailabilityJSON(t *testing.T) {
 		{
 			name: "rooms are NOT available",
 			postedData: url.Values{
-				"start":   []string{"2050-01-01"},
-				"end":     []string{"2050-01-02"},
-				"room_id": []string{"1"},
+				"start":   {"2050-01-01"},
+				"end":     {"2050-01-02"},
+				"room_id": {"1"},
 			},
 			jsonOK:      false,
 			jsonMessage: "",
@@ -416,9 +416,9 @@ func TestRepository_AvailabilityJSON(t *testing.T) {
 		{
 			name: "DB Error",
 			postedData: url.Values{
-				"start":   []string{"2060-01-01"},
-				"end":     []string{"2060-01-02"},
-				"room_id": []string{"1"},
+				"start":   {"2060-01-01"},
+				"end":     {"2060-01-02"},
+				"room_id": {"1"},
 			},
 			jsonOK:      false,
 			jsonMessage: "error querying database",
@@ -434,8 +434,8 @@ func TestRepository_AvailabilityJSON(t *testing.T) {
 		{
 			name: "invalid start date",
 			postedData: url.Values{
-				"start": []string{"invalid"},
-				"end":   []string{"2060-01-02"},
+				"start": {"invalid"},
+				"end":   {"2060-01-02"},
 			},
 			jsonOK:      false,
 			jsonMessage: "invalid start date",
@@ -444,8 +444,8 @@ func TestRepository_AvailabilityJSON(t *testing.T) {
 		{
 			name: "invalid end date",
 			postedData: url.Values{
-				"start": []string{"2060-01-01"},
-				"end":   []string{"invalid"},
+				"start": {"2060-01-01"},
+				"end":   {"invalid"},
 			},
 			jsonOK:      false,
 			jsonMessage: "invalid end date",
@@ -454,9 +454,9 @@ func TestRepository_AvailabilityJSON(t *testing.T) {
 		{
 			name: "invalid room id",
 			postedData: url.Values{
-				"start":   []string{"2060-01-01"},
-				"end":     []string{"2060-01-02"},
-				"room_id": []string{"abc"},
+				"start":   {"2060-01-01"},
+				"end":     {"2060-01-02"},
+				"room_id": {"abc"},
 			},
 			jsonOK:      false,
 			jsonMessage: "invalid room id",
