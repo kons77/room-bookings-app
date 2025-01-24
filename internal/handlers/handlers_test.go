@@ -79,52 +79,69 @@ func TestHandlers(t *testing.T) {
 // TestRepository_Reservation tests the Reservation handler
 // specifically focusing on session handling // keep models.Reservation out of the session and get it out and put it in the session
 func TestRepository_Reservation(t *testing.T) {
-	reservation := models.Reservation{
-		RoomID: 1,
-		Room: models.Room{
-			ID:       1,
-			RoomName: "General's Quarters",
+	testReservation := []struct {
+		name           string //test name
+		resrv          models.Reservation
+		resInSession   bool
+		expectedStatus int
+		errMessage     string
+	}{
+		{
+			name: "everytnig is ok",
+			resrv: models.Reservation{
+				RoomID: 1,
+				Room: models.Room{
+					ID:       1,
+					RoomName: "General's Quarters",
+				},
+			},
+			expectedStatus: http.StatusOK,
+			errMessage:     "Reservation handler returned wrong response code: ",
+			resInSession:   true,
+		},
+		{
+			name:           "no reservation in the session ",
+			expectedStatus: http.StatusTemporaryRedirect,
+			errMessage:     "Reservation handler returned wrong response code: ",
+			resInSession:   false,
+		},
+		{
+			name: "trying to get a non-existent room",
+			resrv: models.Reservation{
+				RoomID: 1000,
+				Room: models.Room{
+					ID:       1,
+					RoomName: "General's Quarters",
+				},
+			},
+			expectedStatus: http.StatusTemporaryRedirect,
+			errMessage:     "Reservation handler returned wrong response code: ",
+			resInSession:   true,
 		},
 	}
 
-	req, _ := http.NewRequest("GET", "/make-reservation", nil) // Create new HTTP request
-	ctx := getCtx(req)
-	req = req.WithContext(ctx)
+	for _, e := range testReservation {
+		t.Run(e.name, func(t *testing.T) {
 
-	rr := httptest.NewRecorder() // response recorder
-	session.Put(ctx, "reservation", reservation)
+			req, _ := http.NewRequest("POST", "/make-reservation", nil)
+			ctx := getCtx(req)
+			req = req.WithContext(ctx)
 
-	handler := http.HandlerFunc(Repo.Reservation)
+			if e.resInSession {
+				session.Put(ctx, "reservation", e.resrv)
+			}
 
-	// manually calling this - do not need routes at all for this test
-	handler.ServeHTTP(rr, req)
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("Reservation handler returned wrong response code: got %d, wanted  %d", rr.Code, http.StatusOK)
-	}
+			rr := httptest.NewRecorder()
 
-	//test case where reservation is not in the session (reset everything)
-	req, _ = http.NewRequest("GET", "/make-reservation", nil)
-	ctx = getCtx(req)
-	req = req.WithContext(ctx)
-	rr = httptest.NewRecorder()
+			handler := http.HandlerFunc(Repo.Reservation)
+			handler.ServeHTTP(rr, req)
 
-	handler.ServeHTTP(rr, req)
-	if rr.Code != http.StatusTemporaryRedirect {
-		t.Errorf("Reservation handler returned wrong response code: got %d, wanted  %d", rr.Code, http.StatusTemporaryRedirect)
-	}
-
-	// simulate the case where trying to get a non-existent room
-	req, _ = http.NewRequest("GET", "/make-reservation", nil)
-	ctx = getCtx(req)
-	req = req.WithContext(ctx)
-	rr = httptest.NewRecorder()
-	reservation.RoomID = 1000
-	session.Put(ctx, "reservation", reservation)
-
-	handler.ServeHTTP(rr, req)
-	if rr.Code != http.StatusTemporaryRedirect {
-		t.Errorf("Reservation handler returned wrong response code: got %d, wanted  %d", rr.Code, http.StatusTemporaryRedirect)
+			if rr.Code != e.expectedStatus {
+				t.Errorf(e.errMessage+"got %d, wanted  %d", rr.Code, e.expectedStatus)
+			}
+		})
 	}
 }
 
@@ -267,7 +284,7 @@ func TestRepository_PostReservation(t *testing.T) {
 			handler.ServeHTTP(rr, req)
 
 			if rr.Code != e.expectedStatus {
-				t.Errorf("PostReservation handler returned wrong response code: got %d, wanted  %d", rr.Code, e.expectedStatus)
+				t.Errorf(e.errMessage+"got %d, wanted  %d", rr.Code, e.expectedStatus)
 			}
 		})
 	}
