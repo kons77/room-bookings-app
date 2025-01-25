@@ -19,6 +19,7 @@ This is the repository for the bookings and reservationg project doing on Trevor
 - [Notie](https://github.com/jaredreich/notie) - alerts and notifications
 - [Sweet Alerts 2](https://sweetalert2.github.io/#download) - pop-up dialogs
 - [Go Simple Mail](https://github.com/xhit/go-simple-mail) - sending emails
+- [RoyalUI-Free-Bootstrap-Admin-Template](https://github.com/BootstrapDash/RoyalUI-Free-Bootstrap-Admin-Template) - admin template
 
 ### Additional tools 
 - [MailHog](https://github.com/mailhog/MailHog) - dummy local mail server 

@@ -36,7 +36,6 @@
             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                 <li><a class="dropdown-item" href="/generals-quarters">General's Quarters</a></li> <!-- /rooms/generals-quarters -->
                 <li><a class="dropdown-item" href="/majors-suite">Major's Suite</a></li> <!-- /rooms/majors-suite -->
-
             </ul>
             </li>
             <li class="nav-item">
@@ -47,7 +46,15 @@
             </li>
             <li class="nav-item">
                 {{if eq .IsAuthenticated 1}}
-                <a class="nav-link" href="/user/logout" tabindex="-1" aria-disabled="true">Logout</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Admin
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="/admin/dashboard">Dashboard</a></li> <!-- /rooms/generals-quarters -->
+                            <li><a class="dropdown-item" href="/user/logout">Logout</a></li> <!-- /rooms/majors-suite -->
+                        </ul>
+                    </li>
                 {{else}}
                     <a class="nav-link" href="/user/login" tabindex="-1" aria-disabled="true">Login</a>
                 {{end}}

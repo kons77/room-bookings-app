@@ -4,3 +4,4 @@ coverage.out;
 bookings
 bookings.exe
 todo.md
+**/coverage.out
