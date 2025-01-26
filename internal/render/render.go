@@ -7,13 +7,17 @@ import (
 	"net/http"
 	"path/filepath"
 	"text/template"
+	"time"
 
 	"github.com/justinas/nosurf"
 	"github.com/kons77/room-bookings-app/internal/config"
 	"github.com/kons77/room-bookings-app/internal/models"
 )
 
-var functions = template.FuncMap{} //holds all of the functions that we want to put into or make available to Goland templates.
+// holds all of the functions that we want to put into or make available to Goland templates.
+var functions = template.FuncMap{
+	"humanDate": HumanDate,
+}
 
 var app *config.AppConfig
 var pathToTemplates = "./templates"
@@ -21,6 +25,11 @@ var pathToTemplates = "./templates"
 // NewRenderer sets the config for the template package
 func NewRenderer(a *config.AppConfig) {
 	app = a
+}
+
+// HumanDate returns time in YYYY-MM-DD format
+func HumanDate(t time.Time) string {
+	return t.Format("2006-01-02")
 }
 
 // AddDefaultData adds data for all templates (displayed on every page)

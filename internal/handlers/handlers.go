@@ -13,6 +13,7 @@ import (
 	"github.com/kons77/room-bookings-app/internal/config"
 	"github.com/kons77/room-bookings-app/internal/driver"
 	"github.com/kons77/room-bookings-app/internal/forms"
+	"github.com/kons77/room-bookings-app/internal/helpers"
 	"github.com/kons77/room-bookings-app/internal/models"
 	"github.com/kons77/room-bookings-app/internal/render"
 	"github.com/kons77/room-bookings-app/internal/repository"
@@ -473,7 +474,7 @@ func parseDate(dateStr string) (time.Time, error) {
 	return time.Parse(layout, dateStr)
 }
 
-// ShowLogin
+// ShowLogin shows the login screen
 func (m *Repository) ShowLogin(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, r, "login.page.tmpl", &models.TemplateData{
 		Form: forms.New(nil),
@@ -527,16 +528,41 @@ func (m *Repository) Logout(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// AdminDashboard
 func (m *Repository) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, r, "admin-dashboard.page.tmpl", &models.TemplateData{})
 }
 
+// AdminAllReservations shows all reservations in admin tool
 func (m *Repository) AdminAllReservations(w http.ResponseWriter, r *http.Request) {
-	render.Template(w, r, "admin-all-reservations.page.tmpl", &models.TemplateData{})
+	reservations, err := m.DB.AllReservations()
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	data := make(map[string]interface{})
+	data["reservations"] = reservations
+
+	render.Template(w, r, "admin-all-reservations.page.tmpl", &models.TemplateData{
+		Data: data,
+	})
 }
 
+// AdminNewReservations shows all new reservations in admin tool
 func (m *Repository) AdminNewReservations(w http.ResponseWriter, r *http.Request) {
-	render.Template(w, r, "admin-new-reservations.page.tmpl", &models.TemplateData{})
+	reservations, err := m.DB.AllReservations()
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	data := make(map[string]interface{})
+	data["reservations"] = reservations
+
+	render.Template(w, r, "admin-new-reservations.page.tmpl", &models.TemplateData{
+		Data: data,
+	})
 }
 
 func (m *Repository) AdminReservationsCalendar(w http.ResponseWriter, r *http.Request) {

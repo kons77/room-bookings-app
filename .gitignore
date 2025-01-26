@@ -1,7 +1,7 @@
 database.yml
 coverage.out
-coverage.out;
 bookings
 bookings.exe
 todo.md
 **/coverage.out
+**/coverage
