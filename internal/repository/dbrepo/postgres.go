@@ -86,7 +86,10 @@ func (m *postgresDBRepo) SearchAvailabilityByDatesByRoomID(start, end time.Time,
 			room_restrictions rr 
 		where 
 			room_id = $1 and 
-			$2 <= rr.end_date and $3 >= rr.start_date; `
+			$2 < rr.end_date and $3 > rr.start_date; `
+
+	// $2 < rr.end_date and $3 > rr.start_date;   - author always choose departure as the next date after arrival but never the same date
+	// $2 <= rr.end_date and $3 >= rr.start_date;   -  if you want to allow same-day check-out and check-in
 
 	row := m.DB.QueryRowContext(ctx, query, roomID, start, end)
 	err := row.Scan(&numRows)
