@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/kons77/room-bookings-app/internal/config"
 	"github.com/kons77/room-bookings-app/internal/driver"
 	"github.com/kons77/room-bookings-app/internal/forms"
@@ -551,7 +552,7 @@ func (m *Repository) AdminAllReservations(w http.ResponseWriter, r *http.Request
 
 // AdminNewReservations shows all new reservations in admin tool
 func (m *Repository) AdminNewReservations(w http.ResponseWriter, r *http.Request) {
-	reservations, err := m.DB.AllReservations()
+	reservations, err := m.DB.AllNewReservations()
 	if err != nil {
 		helpers.ServerError(w, err)
 		return
@@ -605,8 +606,6 @@ func (m *Repository) AdminPostShowReservation(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	log.Println("111")
-
 	exploded := strings.Split(r.RequestURI, "/")
 	id, err := strconv.Atoi(exploded[4])
 	if err != nil {
@@ -619,15 +618,11 @@ func (m *Repository) AdminPostShowReservation(w http.ResponseWriter, r *http.Req
 	stringMap := make(map[string]string)
 	stringMap["src"] = src
 
-	log.Println("222")
-
 	res, err := m.DB.GetReseravtionByID(id)
 	if err != nil {
 		helpers.ServerError(w, err)
 		return
 	}
-
-	log.Println("333")
 
 	res.FirstName = r.Form.Get("first_name")
 	res.LastName = r.Form.Get("last_name")
@@ -657,4 +652,37 @@ func (m *Repository) AdminPostShowReservation(w http.ResponseWriter, r *http.Req
 // AdminReservationsCalendar displays the reservation calendar
 func (m *Repository) AdminReservationsCalendar(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, r, "admin-reservations-calendar.page.tmpl", &models.TemplateData{})
+}
+
+// AdminProcessReservation marks reservation as processed
+func (m *Repository) AdminProcessReservation(w http.ResponseWriter, r *http.Request) {
+	// ! maybe rewrite later
+	/* it's a bit wrong logic here. I want checkbox instead of "processed" button
+	and this checkbox will change processed status from 0 to 1 and back
+	and checkbox turn on if processed=1 and turn off if processed = 0 when opening the show-reservation page
+	After changing checkbox it won't be redirected to list of all/new reservations but stays on show-reservation page
+	*/
+
+	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	src := chi.URLParam(r, "src")
+	err := m.DB.UpdateProcessedForReservation(id, 1)
+	if err != nil {
+		helpers.ServerError(w, err)
+	}
+	m.App.Session.Put(r.Context(), "flash", "Reservati0n marked as pr0cessed")
+	http.Redirect(w, r, fmt.Sprintf("/admin/reservations-%s", src), http.StatusSeeOther)
+
+}
+
+// AdminProcessReservation delete reservation
+func (m *Repository) AdminDeleteReservation(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	src := chi.URLParam(r, "src")
+	err := m.DB.DeleteReservation(id)
+	if err != nil {
+		helpers.ServerError(w, err)
+	}
+	m.App.Session.Put(r.Context(), "flash", "Reservati0n deleted")
+	http.Redirect(w, r, fmt.Sprintf("/admin/reservations-%s", src), http.StatusSeeOther)
+
 }

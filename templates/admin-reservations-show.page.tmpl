@@ -12,6 +12,13 @@
             <strong>Arrival:</strong> {{humanDate $res.StartDate}}  <br>
             <strong>Departure:</strong> {{humanDate $res.EndDate}}  <br>
             <strong>Room:</strong> {{$res.Room.RoomName}}  <br> 
+            <strong>Status:</strong> 
+            {{if eq $res.Processed 0}}  
+                Unconfirmed <em>(new)</em>
+            {{else if eq $res.Processed 1}}
+                Confirmed <em>(processed) </em>
+            {{end}}
+            <br> 
         </p>
 
         <form action="/admin/reservations/{{$src}}/{{$res.ID}}" method="post" class="" novalidate>
@@ -57,11 +64,46 @@
                 name="phone" value="{{$res.Phone}}" required>  
             </div>
 
-            
-            <input type="submit" class="btn btn-primary" value="Save">
-            <a href="/admin/reservations-{{$src}}" class="btn btn-warning">Cancel</a>
+            <hr>            
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <input type="submit" class="btn btn-primary" value="Save">
+                    <a href="/admin/reservations-{{$src}}" class="btn btn-warning">Cancel</a>
+                    <a href="#!" class="btn btn-info" onclick="processRes({{$res.ID}})">Mark as Processed</a>
+                </div>
+                <div>
+                    <a href="#!" class="btn btn-danger" onclick="deleteRes({{$res.ID}})">Delete</a>
+                </div>
+            </div>
         </form>
 
     </div>
 {{end}}
 
+{{define "js"}}
+    {{$src := index .StringMap "src"}}
+    <script>
+
+        function confirmAndExecute(url) {
+            attention.custom({
+                icon: 'warning', 
+                msg: 'Are you sure?',
+                callback: function(result) {
+                    if (result !== false) {
+                        window.location.href = url;  
+                    }
+                }                
+            })
+        }
+
+        function processRes(id) {
+            url = "/admin/process-reservation/{{$src}}/" + id;
+            confirmAndExecute(url);
+        }
+
+        function deleteRes(id){
+            url = "/admin/delete-reservation/{{$src}}/" + id;
+            confirmAndExecute(url);            
+        }
+    </script>
+{{end}}

@@ -436,7 +436,7 @@ func (m *postgresDBRepo) UpdateProcessedForReservation(id, processed int) error 
 	defer cancel()
 
 	query := `
-		update reservations set processed $1 where id = $2
+		update reservations set processed = $1 where id = $2
 	`
 
 	_, err := m.DB.ExecContext(ctx, query, processed, id)
