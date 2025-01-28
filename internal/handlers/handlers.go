@@ -651,8 +651,9 @@ func (m *Repository) AdminPostShowReservation(w http.ResponseWriter, r *http.Req
 
 // AdminReservationsCalendar displays the reservation calendar
 func (m *Repository) AdminReservationsCalendar(w http.ResponseWriter, r *http.Request) {
-	// url format /admin/reservations-calendar/?y=2025&m=1
+	log.Println("Query parameters:", r.URL.Query())
 
+	// url format /admin/reservations-calendar/?y=2025&m=1
 	// assume that there is no month/year specified
 	now := time.Now()
 
