@@ -5,10 +5,16 @@
 {{end}}
 
 {{define "content"}}
+    {{$now := index .Data "now"}}
+    {{$rooms := index .Data "rooms"}}
+    {{$dim := index .IntMap "days_in_month"}}
+
+    <p>If a date is checked, nobody can book make a reservation for those particular dates.</p>
+
     <div class="col-md-12">
         
         <div class="text-center">
-            <h3>{{index .StringMap "this_month"}} {{index .StringMap "this_month_year"}} </h3>
+            <h3>{{formatDate $now "January"}} {{formatDate $now "2006"}} </h3>
         </div>
 
         <div class="d-flex justify-content-between align-items-center">
@@ -23,6 +29,33 @@
             &gt;&gt;</a>
             </div>
         </div>
+
+        {{range $rooms}}
+            {{$roomID := .ID}}
+
+            <h4 class="mt-4">{{.RoomName}}</h4>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm">
+                    <tr class="table-secondary">
+                        {{range $index := iterate $dim}}
+                            <td class="text-center">
+                                {{$index}}
+                            </td>
+                        {{end}}
+                    </tr>
+
+                    <tr>
+                        {{range $index := iterate $dim}}
+                            <td class="text-center">                            
+                                <input type="checkbox" name="" id="">                        
+                            </td>
+                        {{end}}
+                    </tr>
+                </table>
+            </div>
+
+        {{end}}
 
     </div>
 {{end}}
