@@ -8,6 +8,8 @@
     {{$now := index .Data "now"}}
     {{$rooms := index .Data "rooms"}}
     {{$dim := index .IntMap "days_in_month"}}
+    {{$curMonth := index .StringMap "this_month"}}
+    {{$curYear := index .StringMap "this_month_year"}}
 
     <p>If a date is checked, nobody can book make a reservation for those particular dates.</p>
 
