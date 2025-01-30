@@ -35,7 +35,7 @@ func Add(a,b int) int{
 func Iterate(count int) []int {
 	var i int
 	var items []int
-	for i = 1; i < count; i++ {
+	for i = 1; i <= count; i++ {
 		items = append(items, i)
 	}
 	return items

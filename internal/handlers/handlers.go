@@ -741,9 +741,9 @@ func (m *Repository) AdminReservationsCalendar(w http.ResponseWriter, r *http.Re
 	}
 
 	// log.Println("passed TemplateData:")
-	log.Println("stringMap: \n", stringMap)
+	// log.Println("stringMap: \n", stringMap)
 	// log.Println("intMap: \n", intMap)
-	log.Println("data: \n", data)
+	// log.Println("data: \n", data)
 
 	render.Template(w, r, "admin-reservations-calendar.page.tmpl", &models.TemplateData{
 		StringMap: stringMap,
