@@ -537,14 +537,12 @@ func (m *Repository) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 // ! AdminReservationsGrid shows all or new reservations in admin tool depends on src
 func (m *Repository) AdminReservationsGrid(w http.ResponseWriter, r *http.Request) {
 	exploded := strings.Split(r.RequestURI, "/")
-	log.Println(exploded)
 	src := exploded[3]
 
 	stringMap := make(map[string]string)
 	stringMap["src"] = src
 
 	displaysAllReservations := 0
-
 	if src == "all" {
 		displaysAllReservations = 1
 	}

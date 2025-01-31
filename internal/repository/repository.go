@@ -17,13 +17,13 @@ type DatabaseRepo interface {
 	GetUserByID(id int) (models.User, error)
 	UpdateUser(u models.User) error
 	Authenticate(email, testPassword string) (int, string, error)
-	AllReservations() ([]models.Reservation, error)
-	AllNewReservations() ([]models.Reservation, error)
+	//AllReservations() ([]models.Reservation, error)
+	//AllNewReservations() ([]models.Reservation, error)
+	ReservationsForGrid(displaysAllReservations int) ([]models.Reservation, error)
 	GetReseravtionByID(id int) (models.Reservation, error)
 	UpdateReservation(u models.Reservation) error
 	DeleteReservation(id int) error
 	UpdateProcessedForReservation(id, processed int) error
 	AllRooms() ([]models.Room, error)
 	GetRestrictionsForRoomByDate(roomID int, start, end time.Time) ([]models.RoomRestriction, error)
-	ReservationsForGrid(displaysAllReservations int) ([]models.Reservation, error)
 }

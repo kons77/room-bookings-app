@@ -116,12 +116,20 @@ func (m *testDBRepo) Authenticate(email, testPassword string) (int, string, erro
 	return 1, "", nil
 }
 
+/*
 func (m *testDBRepo) AllReservations() ([]models.Reservation, error) {
 	var reservations []models.Reservation
 	return reservations, nil
 }
 
 func (m *testDBRepo) AllNewReservations() ([]models.Reservation, error) {
+	var reservations []models.Reservation
+	return reservations, nil
+}
+*/
+
+// ReservationsForGrid returns a slice of all or new reservations depends of src
+func (m *testDBRepo) ReservationsForGrid(displaysAllReservations int) ([]models.Reservation, error) {
 	var reservations []models.Reservation
 	return reservations, nil
 }
@@ -154,10 +162,4 @@ func (m *testDBRepo) AllRooms() ([]models.Room, error) {
 func (m *testDBRepo) GetRestrictionsForRoomByDate(roomID int, start, end time.Time) ([]models.RoomRestriction, error) {
 	var restrictions []models.RoomRestriction
 	return restrictions, nil
-}
-
-// ReservationsForGrid returns a slice of all or new reservations depends of src
-func (m *testDBRepo) ReservationsForGrid(displaysAllReservations int) ([]models.Reservation, error) {
-	var reservations []models.Reservation
-	return reservations, nil
 }
