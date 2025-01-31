@@ -782,11 +782,6 @@ func (m *Repository) AdminReservationsCalendar(w http.ResponseWriter, r *http.Re
 	})
 }
 
-// AdminPostReservationsCalendar handles post of reservation calendar
-func (m *Repository) AdminPostReservationsCalendar(w http.ResponseWriter, r *http.Request) {
-	log.Println("works")
-}
-
 // AdminProcessReservation marks reservation as processed
 func (m *Repository) AdminProcessReservation(w http.ResponseWriter, r *http.Request) {
 	// ! maybe rewrite later
@@ -817,5 +812,21 @@ func (m *Repository) AdminDeleteReservation(w http.ResponseWriter, r *http.Reque
 	}
 	m.App.Session.Put(r.Context(), "flash", "Reservati0n deleted")
 	http.Redirect(w, r, fmt.Sprintf("/admin/reservations/%s", src), http.StatusSeeOther)
+}
 
+// AdminPostReservationsCalendar handles post of reservation calendar
+func (m *Repository) AdminPostReservationsCalendar(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	year, _ := strconv.Atoi(r.Form.Get("y"))
+	month, _ := strconv.Atoi(r.Form.Get("m"))
+
+	// process blocks
+
+	m.App.Session.Put(r.Context(), "flash", "Changed saved")
+	http.Redirect(w, r, fmt.Sprintf("/admin/reservations/cal?y=%d&m=%d", year, month), http.StatusSeeOther)
 }

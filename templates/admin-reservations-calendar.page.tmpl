@@ -34,6 +34,8 @@
 
         <form method="post" action="/admin/reservations/cal">
             <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+            <input type="hidden" name="m" value="{{$curMonth}}">
+            <input type="hidden" name="y" value="{{$curYear}}">
 
         
             {{range $rooms}}
@@ -76,7 +78,8 @@
                                             value="{{$blockValue}}"                                     
                                         {{else}}
                                             {{/* If false - create an add input */}}
-                                            name="add_block_{{$roomID}}_{{$dateKey}}"                                         
+                                            name="add_block_{{$roomID}}_{{$dateKey}}" 
+                                            value="1"                                        
                                         {{end}}
                                     type="checkbox">                        
                                 {{end}}
