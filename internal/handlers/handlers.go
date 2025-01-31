@@ -534,6 +534,37 @@ func (m *Repository) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, r, "admin-dashboard.page.tmpl", &models.TemplateData{})
 }
 
+// ! AdminReservationsGrid shows all or new reservations in admin tool depends on src
+func (m *Repository) AdminReservationsGrid(w http.ResponseWriter, r *http.Request) {
+	exploded := strings.Split(r.RequestURI, "/")
+	log.Println(exploded)
+	src := exploded[3]
+
+	stringMap := make(map[string]string)
+	stringMap["src"] = src
+
+	displaysAllReservations := 0
+
+	if src == "all" {
+		displaysAllReservations = 1
+	}
+
+	reservations, err := m.DB.ReservationsForGrid(displaysAllReservations)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	data := make(map[string]interface{})
+	data["reservations"] = reservations
+
+	render.Template(w, r, "admin-reservations-grid.page.tmpl", &models.TemplateData{
+		StringMap: stringMap,
+		Data:      data,
+	})
+}
+
+/*
 // AdminAllReservations shows all reservations in admin tool
 func (m *Repository) AdminAllReservations(w http.ResponseWriter, r *http.Request) {
 	reservations, err := m.DB.AllReservations()
@@ -548,8 +579,9 @@ func (m *Repository) AdminAllReservations(w http.ResponseWriter, r *http.Request
 	render.Template(w, r, "admin-all-reservations.page.tmpl", &models.TemplateData{
 		Data: data,
 	})
-}
+}*/
 
+/*
 // AdminNewReservations shows all new reservations in admin tool
 func (m *Repository) AdminNewReservations(w http.ResponseWriter, r *http.Request) {
 	reservations, err := m.DB.AllNewReservations()
@@ -564,7 +596,7 @@ func (m *Repository) AdminNewReservations(w http.ResponseWriter, r *http.Request
 	render.Template(w, r, "admin-new-reservations.page.tmpl", &models.TemplateData{
 		Data: data,
 	})
-}
+}*/
 
 // AdminShowReservation shows the reservation in the admin tool
 func (m *Repository) AdminShowReservation(w http.ResponseWriter, r *http.Request) {
@@ -636,7 +668,7 @@ func (m *Repository) AdminPostShowReservation(w http.ResponseWriter, r *http.Req
 	}
 
 	m.App.Session.Put(r.Context(), "flash", "Changes saved")
-	http.Redirect(w, r, fmt.Sprintf("/admin/reservations-%s", src), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/admin/reservations/%s", src), http.StatusSeeOther)
 
 	/*
 		And one of the things that I would do in production, of course, is put error checking in here.
@@ -655,6 +687,7 @@ func (m *Repository) AdminReservationsCalendar(w http.ResponseWriter, r *http.Re
 	// url format /admin/reservations-calendar/?y=2025&m=1
 	// assume that there is no month/year specified
 	now := time.Now()
+	now = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 
 	if r.URL.Query().Get("y") != "" {
 		year, _ := strconv.Atoi(r.URL.Query().Get("y"))
@@ -692,7 +725,6 @@ func (m *Repository) AdminReservationsCalendar(w http.ResponseWriter, r *http.Re
 	// days in the current month
 	intMap := make(map[string]int)
 	intMap["days_in_month"] = lastOfMonth.Day()
-	log.Println(intMap)
 
 	// get all rooms info
 	rooms, err := m.DB.AllRooms()
@@ -742,7 +774,7 @@ func (m *Repository) AdminReservationsCalendar(w http.ResponseWriter, r *http.Re
 
 	// log.Println("passed TemplateData:")
 	// log.Println("stringMap: \n", stringMap)
-	// log.Println("intMap: \n", intMap)
+	// log.Println("intMap:  ", intMap)
 	// log.Println("data: \n", data)
 
 	render.Template(w, r, "admin-reservations-calendar.page.tmpl", &models.TemplateData{
@@ -768,7 +800,7 @@ func (m *Repository) AdminProcessReservation(w http.ResponseWriter, r *http.Requ
 		helpers.ServerError(w, err)
 	}
 	m.App.Session.Put(r.Context(), "flash", "Reservati0n marked as pr0cessed")
-	http.Redirect(w, r, fmt.Sprintf("/admin/reservations-%s", src), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/admin/reservations/%s", src), http.StatusSeeOther)
 
 }
 
@@ -781,6 +813,6 @@ func (m *Repository) AdminDeleteReservation(w http.ResponseWriter, r *http.Reque
 		helpers.ServerError(w, err)
 	}
 	m.App.Session.Put(r.Context(), "flash", "Reservati0n deleted")
-	http.Redirect(w, r, fmt.Sprintf("/admin/reservations-%s", src), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/admin/reservations/%s", src), http.StatusSeeOther)
 
 }

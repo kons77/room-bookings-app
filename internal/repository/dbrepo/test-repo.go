@@ -155,3 +155,9 @@ func (m *testDBRepo) GetRestrictionsForRoomByDate(roomID int, start, end time.Ti
 	var restrictions []models.RoomRestriction
 	return restrictions, nil
 }
+
+// ReservationsForGrid returns a slice of all or new reservations depends of src
+func (m *testDBRepo) ReservationsForGrid(displaysAllReservations int) ([]models.Reservation, error) {
+	var reservations []models.Reservation
+	return reservations, nil
+}

@@ -49,8 +49,9 @@ func routes(app *config.AppConfig) http.Handler {
 		//mux.Use(Auth)
 		mux.Get("/dashboard", handlers.Repo.AdminDashboard)
 
-		mux.Get("/reservations-new", handlers.Repo.AdminNewReservations)
-		mux.Get("/reservations-all", handlers.Repo.AdminAllReservations)
+		// mux.Get("/reservations-new", handlers.Repo.AdminNewReservations)
+		// mux.Get("/reservations-all", handlers.Repo.AdminAllReservations)
+		mux.Get("/reservations/{src}", handlers.Repo.AdminReservationsGrid)
 		mux.Get("/reservations-calendar", handlers.Repo.AdminReservationsCalendar)
 		mux.Get("/process-reservation/{src}/{id}", handlers.Repo.AdminProcessReservation)
 		mux.Get("/delete-reservation/{src}/{id}", handlers.Repo.AdminDeleteReservation)
