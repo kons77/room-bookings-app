@@ -42,7 +42,7 @@ var testGET = []struct {
 }
 
 // TestHandlers runs table-driven tests for all GET handlers
-func TestHandlers(t *testing.T) {
+func TestGetHandlers(t *testing.T) {
 	routes := getRoutes()
 	// Uses httptest.NewTLSServer to simulate HTTPS connections
 	ts := httptest.NewTLSServer(routes) // ts test server
