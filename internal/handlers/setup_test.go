@@ -24,7 +24,11 @@ import (
 var app config.AppConfig
 var session *scs.SessionManager
 var pathToTemplates = "./../../templates"
-var functions = template.FuncMap{}
+var functions = template.FuncMap{
+	"humanDate":  render.HumanDate,
+	"formatDate": render.FormatDate,
+	"iterate":    render.Iterate,
+}
 
 // TestMain is part of the testing package available to us in the standard library
 // TestMain is the entry point for testing
@@ -32,6 +36,10 @@ var functions = template.FuncMap{}
 func TestMain(m *testing.M) {
 	// Register custom types for session storage
 	gob.Register(models.Reservation{})
+	gob.Register(models.User{})
+	gob.Register(models.Room{})
+	gob.Register(models.Restriction{})
+	gob.Register(map[string]int{})
 
 	// change this to true in production
 	app.InProduction = false
@@ -97,6 +105,8 @@ func getRoutes() http.Handler {
 	mux.Get("/search-availability", Repo.Availability)
 	mux.Post("/search-availability", Repo.PostAvailability)
 	mux.Post("/search-availability-json", Repo.AvailabilityJSON)
+	mux.Get("/choose-room/{id}", Repo.ChooseRoom)
+	mux.Get("/book-room", Repo.BookRoom)
 
 	mux.Get("/contact", Repo.Contact)
 
@@ -104,9 +114,22 @@ func getRoutes() http.Handler {
 	mux.Post("/make-reservation", Repo.PostReservation)
 	mux.Get("/reservation-summary", Repo.ReservationSummary)
 
+	mux.Get("/user/login", Repo.ShowLogin)
+	mux.Post("/user/login", Repo.PostShowLogin)
+	mux.Get("/user/logout", Repo.Logout)
+
 	// tell our app where to find static files
 	fileServer := http.FileServer(http.Dir("./static/"))
 	mux.Handle("/static/*", http.StripPrefix("/static", fileServer))
+
+	mux.Get("/admin/dashboard", Repo.AdminDashboard)
+	mux.Get("/admin/reservations/{src}", Repo.AdminReservationsGrid)
+	mux.Get("/admin/reservations/cal", Repo.AdminReservationsCalendar)
+	mux.Post("/admin/reservations/cal", Repo.AdminPostReservationsCalendar)
+	mux.Get("/admin/process-reservation/{src}/{id}/do", Repo.AdminProcessReservation)
+	mux.Get("/admin/delete-reservation/{src}/{id}/do", Repo.AdminDeleteReservation)
+	mux.Get("/admin/reservations/{src}/{id}/show", Repo.AdminShowReservation)
+	mux.Post("/admin/reservations/{src}/{id}", Repo.AdminPostShowReservation)
 
 	return mux
 

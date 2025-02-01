@@ -88,7 +88,7 @@ func main() {
 
 func run() (*driver.DB, error) {
 
-	// what am I going to put in the session
+	// Register custom types for session storage // what am I going to put in the session
 	gob.Register(models.Reservation{})
 	gob.Register(models.User{})
 	gob.Register(models.Room{})

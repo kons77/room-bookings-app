@@ -18,7 +18,6 @@ import (
 )
 
 // theTests contains table-driven test cases for handler testing
-// Currently commented out as we're using different testing approach
 var testGET = []struct {
 	name               string // test name
 	url                string //routes path
@@ -31,30 +30,21 @@ var testGET = []struct {
 	{"ms", "/majors-suite", "GET", http.StatusOK},
 	{"sa", "/search-availability", "GET", http.StatusOK},
 	{"contact", "/contact", "GET", http.StatusOK},
-
-	/*
-		{"post-search-avail", "/search-availability", "POST", []postedData{
-			{key: "start", value: "2024-01-01"},
-			{key: "end", value: "2024-01-02"},
-		}, http.StatusOK},
-		{"post-search-avail-json", "/search-availability-json", "POST", []postedData{
-			{key: "start", value: "2024-01-01"},
-			{key: "end", value: "2024-01-02"},
-		}, http.StatusOK},
-		{"make-reservation-post", "/make-reservation", "POST", []postedData{
-			{key: "first_name", value: "Joe"},
-			{key: "last_name", value: "Joyson"},
-			{key: "email", value: "jj@here.com"},
-			{key: "phone", value: "555-555-5555"},
-		}, http.StatusOK},
-		{"make-reservation-summary", "/reservation-summary", "GET", []postedData{}, http.StatusOK},
-	*/
+	{"non-existent", "/green/eggs/and/ham", "GET", http.StatusNotFound},
+	// new routes
+	{"login", "/user/login", "GET", http.StatusOK},
+	{"logout", "/user/login", "GET", http.StatusOK},
+	{"dashboard", "/admin/dashboard", "GET", http.StatusOK},
+	{"new res", "/admin/reservations/new", "GET", http.StatusOK},
+	{"all res", "/admin/reservations/all", "GET", http.StatusOK},
+	{"cal", "/admin/reservations/cal", "GET", http.StatusOK},
+	{"show res", "/admin/reservations/new/1/show", "GET", http.StatusOK},
 }
 
-// TestHandlers runs table-driven tests for all handlers
-// Uses httptest.NewTLSServer to simulate HTTPS connections
+// TestHandlers runs table-driven tests for all GET handlers
 func TestHandlers(t *testing.T) {
 	routes := getRoutes()
+	// Uses httptest.NewTLSServer to simulate HTTPS connections
 	ts := httptest.NewTLSServer(routes) // ts test server
 	defer ts.Close()                    // defer = close all of this after function is finished
 
@@ -719,6 +709,84 @@ func TestNewRepo(t *testing.T) {
 
 	if reflect.TypeOf(testRepo).String() != "*handlers.Repository" {
 		t.Errorf("Did not get correct type from NewRepo: got %s, wanted *Repository", reflect.TypeOf(testRepo).String())
+	}
+}
+
+var loginTests = []struct {
+	name               string
+	email              string
+	expectedStatusCode int
+	expectedHTML       string
+	expectedLocation   string // where redtirect to
+}{
+	{
+		"valid-credentials",
+		"me@here.com", // valid email in the test-repo.go
+		http.StatusSeeOther,
+		"",
+		"/",
+	},
+	{
+		"invalid-credentials",
+		"jack@nimble.com",
+		http.StatusSeeOther,
+		"",
+		"/user/login",
+	},
+	{
+		"invaid-data",
+		"j",
+		http.StatusOK,
+		`action="/user/login"`,
+		"",
+	},
+}
+
+func Test_Login(t *testing.T) {
+	// range through all tests
+	for _, tc := range loginTests {
+		t.Run(tc.name, func(t *testing.T) {
+			postedData := url.Values{
+				"email":    {tc.email},
+				"password": {"password"},
+			}
+			// create new request
+			req, _ := http.NewRequest("POST", "/user/login", strings.NewReader(postedData.Encode()))
+			// get context with session
+			ctx := getCtx(req)
+			req = req.WithContext(ctx)
+			// set the request header
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			// get response recorder
+			rr := httptest.NewRecorder()
+			// make handler handlerfunc
+			handler := http.HandlerFunc(Repo.PostShowLogin)
+			// make request to our handler
+			handler.ServeHTTP(rr, req)
+
+			if rr.Code != tc.expectedStatusCode {
+				t.Errorf("failed %s:  expected code %d, but got %d", tc.name, tc.expectedStatusCode, rr.Code)
+			}
+
+			if tc.expectedLocation != "" {
+				// get the url from test
+				actualLoc, _ := rr.Result().Location()
+				if actualLoc.String() != tc.expectedLocation {
+					t.Errorf("failed %s:  expected location %s, but got location %s",
+						tc.name, tc.expectedLocation, actualLoc.String())
+				}
+			}
+
+			// checking for expected values in HTML - never fire
+			if tc.expectedHTML != "" {
+				// read the response body into a string
+				html := rr.Body.String()
+				if !strings.Contains(html, tc.expectedHTML) {
+					t.Errorf("failed %s:  expected to find %s, but did not", tc.name, tc.expectedHTML)
+				}
+			}
+		})
+
 	}
 }
 
