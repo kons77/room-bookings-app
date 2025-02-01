@@ -25,7 +25,9 @@
         </p>
 
         <form action="/admin/reservations/{{$src}}/{{$res.ID}}" method="post" class="" novalidate>
-            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">            
+            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">    
+            <input type="hidden" name="y" value="{{$curYear}}">
+            <input type="hidden" name="m" value="{{$curMonth}}">        
 
             <div class="form-group mt-4">
                 <label for="first_name">First Name:</label>
@@ -82,8 +84,9 @@
                         <a href="/admin/reservations/{{$src}}" class="btn btn-warning">Cancel</a>
                         <a href="#!" onclick="window.history.go(-1)" class="btn btn-warning">Cancel</a>                     
                     */}}
-                    
-                    <a href="#!" class="btn btn-info" onclick="processRes({{$res.ID}})">Mark as Processed</a>
+                    {{if eq $res.Processed 0}}  
+                        <a href="#!" class="btn btn-info" onclick="processRes({{$res.ID}})">Mark as Processed</a>
+                    {{end}}
                 </div>
                 <div>
                     <a href="#!" class="btn btn-danger" onclick="deleteRes({{$res.ID}})">Delete</a>
@@ -96,6 +99,8 @@
 
 {{define "js"}}
     {{$src := index .StringMap "src"}}
+    {{$curYear := index .StringMap "year"}}
+    {{$curMonth := index .StringMap "month"}}
     <script>
 
         function confirmAndExecute(url) {
@@ -111,12 +116,12 @@
         }
 
         function processRes(id) {
-            url = "/admin/process-reservation/{{$src}}/" + id + "/show";
+            url = "/admin/process-reservation/{{$src}}/" + id + "/do?y={{$curYear}}&m={{$curMonth}}";            
             confirmAndExecute(url);
         }
 
         function deleteRes(id){
-            url = "/admin/delete-reservation/{{$src}}/" + id;
+            url = "/admin/delete-reservation/{{$src}}/" + id + "/do?y={{$curYear}}&m={{$curMonth}}";        
             confirmAndExecute(url);            
         }
     </script>

@@ -670,8 +670,20 @@ func (m *Repository) AdminPostShowReservation(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	year := r.FormValue("y")
+	month := r.FormValue("m")
+	log.Println(year, month)
+
+	url := ""
+
+	if year != "" {
+		url = fmt.Sprintf("/admin/reservations/%s?y=%s&m=%s", src, year, month)
+	} else {
+		url = fmt.Sprintf("/admin/reservations/%s", src)
+	}
+
 	m.App.Session.Put(r.Context(), "flash", "Changes saved")
-	http.Redirect(w, r, fmt.Sprintf("/admin/reservations/%s", src), http.StatusSeeOther)
+	http.Redirect(w, r, url, http.StatusSeeOther)
 
 	/*
 		And one of the things that I would do in production, of course, is put error checking in here.
@@ -797,8 +809,20 @@ func (m *Repository) AdminProcessReservation(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		helpers.ServerError(w, err)
 	}
+
+	year := r.URL.Query().Get("y")
+	month := r.URL.Query().Get("m")
+
+	url := ""
+
+	if year != "" {
+		url = fmt.Sprintf("/admin/reservations/%s?y=%s&m=%s", src, year, month)
+	} else {
+		url = fmt.Sprintf("/admin/reservations/%s", src)
+	}
+
 	m.App.Session.Put(r.Context(), "flash", "Reservati0n marked as pr0cessed")
-	http.Redirect(w, r, fmt.Sprintf("/admin/reservations/%s", src), http.StatusSeeOther)
+	http.Redirect(w, r, url, http.StatusSeeOther)
 
 }
 
@@ -810,8 +834,20 @@ func (m *Repository) AdminDeleteReservation(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		helpers.ServerError(w, err)
 	}
+
+	year := r.URL.Query().Get("y")
+	month := r.URL.Query().Get("m")
+
+	url := ""
+
+	if year != "" {
+		url = fmt.Sprintf("/admin/reservations/%s?y=%s&m=%s", src, year, month)
+	} else {
+		url = fmt.Sprintf("/admin/reservations/%s", src)
+	}
+
 	m.App.Session.Put(r.Context(), "flash", "Reservati0n deleted")
-	http.Redirect(w, r, fmt.Sprintf("/admin/reservations/%s", src), http.StatusSeeOther)
+	http.Redirect(w, r, url, http.StatusSeeOther)
 }
 
 // AdminPostReservationsCalendar handles post of reservation calendar
