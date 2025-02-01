@@ -65,7 +65,7 @@
                             <td class="text-center">      
                                 {{/* Is there a reservations links to the actual reservations */}}
                                 {{if gt $resValue 0 }}
-                                    <a href="/admin/reservations/cal/{{$resValue}}">
+                                    <a href="/admin/reservations/cal/{{$resValue}}/show?y={{$curYear}}&m={{$curMonth}}">
                                         <span class="text-danger">R</span>
                                     </a>
                                 {{else}}

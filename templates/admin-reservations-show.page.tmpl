@@ -7,6 +7,9 @@
 {{define "content"}}
     {{$res := index .Data "reservation"}}
     {{$src := index .StringMap "src"}}
+    {{$curYear := index .StringMap "year"}}
+    {{$curMonth := index .StringMap "month"}}
+
     <div class="col-md-12">
         <p>
             <strong>Arrival:</strong> {{humanDate $res.StartDate}}  <br>
@@ -22,7 +25,7 @@
         </p>
 
         <form action="/admin/reservations/{{$src}}/{{$res.ID}}" method="post" class="" novalidate>
-            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">            
 
             <div class="form-group mt-4">
                 <label for="first_name">First Name:</label>
@@ -67,9 +70,19 @@
             <hr>            
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <input type="submit" class="btn btn-primary" value="Save">                    
-                    <a href="#!" onclick="window.history.go(-1)" class="btn btn-warning">Cancel</a>
-                    {{/* <a href="/admin/reservations/{{$src}}" class="btn btn-warning">Cancel</a> */}}
+                    <input type="submit" class="btn btn-primary" value="Save"> 
+                    {{if eq $src "cal"}}
+                        <a href="/admin/reservations/{{$src}}?y={{$curYear}}&m={{$curMonth}}" class="btn btn-warning">Cancel</a>
+                    {{else}}
+                        <a href="/admin/reservations/{{$src}}" class="btn btn-warning">Cancel</a>
+                    {{end}}                   
+                    
+                    {{/* I dislike window.history.go(-1), because I often have two (or more) tabs open 
+                            at the same time while working, and the history gets confused.  
+                        <a href="/admin/reservations/{{$src}}" class="btn btn-warning">Cancel</a>
+                        <a href="#!" onclick="window.history.go(-1)" class="btn btn-warning">Cancel</a>                     
+                    */}}
+                    
                     <a href="#!" class="btn btn-info" onclick="processRes({{$res.ID}})">Mark as Processed</a>
                 </div>
                 <div>
@@ -98,7 +111,7 @@
         }
 
         function processRes(id) {
-            url = "/admin/process-reservation/{{$src}}/" + id;
+            url = "/admin/process-reservation/{{$src}}/" + id + "/show";
             confirmAndExecute(url);
         }
 
