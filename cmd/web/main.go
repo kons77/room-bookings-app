@@ -132,7 +132,8 @@ func run() (*driver.DB, error) {
 	session.Lifetime = 24 * time.Hour
 	session.Cookie.Persist = true                  // save after closing browser
 	session.Cookie.SameSite = http.SameSiteLaxMode // how strict
-	session.Cookie.Secure = app.InProduction       // insist the cookie to be encrypted - set true in production, for https
+	// Secure - insist the cookie to be encrypted - set true in production, for https
+	session.Cookie.Secure = false //app.InProduction
 
 	app.Session = session
 
