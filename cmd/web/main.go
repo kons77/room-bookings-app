@@ -70,7 +70,6 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.SQL.Close() // connection won't be closed until the main function itself stops running
-
 	defer close(app.MailChan)
 
 	fmt.Println("Starting mail listener...")
