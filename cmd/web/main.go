@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/gob"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -95,11 +96,32 @@ func run() (*driver.DB, error) {
 	gob.Register(models.Restriction{})
 	gob.Register(map[string]int{})
 
+	// read flags
+	inProduction := flag.Bool("production", true, "Application is in production")
+	useCache := flag.Bool("cache", true, "Use template cache")
+	// read this from yaml file by func getPasswordFromYaml() to struct DBCfgAlt
+	dbHost := flag.String("dbhost", "127.0.0.1", "Database host") // localhost
+	dbName := flag.String("dbname", "", "Database name")
+	dbUser := flag.String("dbuser", "", "Database user")
+	dbPswd := flag.String("dbpswd", "", "Database password")
+	dbPort := flag.String("dbport", "5432", "Database port")
+	dbSSL := flag.String("dbssl", "disable", "Database SSL settings (disable, prefer, require)")
+
+	flag.Parse()
+
+	_ = *dbPswd //
+
+	if *dbName == "" || *dbUser == "" {
+		fmt.Println("Missing required flags")
+		os.Exit(1)
+	}
+
 	mailChan := make(chan models.MailData)
 	app.MailChan = mailChan
 
-	//change this ti true when in production
-	app.InProduction = false
+	//
+	app.InProduction = *inProduction
+	app.UseCache = *useCache
 
 	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	app.InfoLog = infoLog
@@ -118,18 +140,22 @@ func run() (*driver.DB, error) {
 	// connect to db
 	log.Println("Connecting to database... ")
 
+	// ! rewrite to Load defaults from yaml (test and production) - but override with flags if provided
 	pswd, err := getPasswordFromYaml()
 	// log.Println(pswd, err)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	db, err := driver.ConnectSQL("host=localhost port=5432 dbname=bookings user=postgres password=" + pswd)
+	connectionString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=%s", *dbHost, *dbPort, *dbName, *dbUser, pswd, *dbSSL)
+
+	// ! rewrite to Load defaults from yaml (test and production) - but override with flags if provided
+	db, err := driver.ConnectSQL(connectionString)
 	if err != nil {
 		log.Fatal("Cannot connet to database! Dying...")
 	}
-	log.Println("Connected to database")
 	// defer db.SQL.Close() - it must be not here but in main function
+	log.Println("Connected to database")
 
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
@@ -137,7 +163,6 @@ func run() (*driver.DB, error) {
 		return nil, err
 	}
 	app.TemplateCache = tc
-	app.UseCache = app.InProduction
 
 	repo := handlers.NewRepo(&app, db)
 	handlers.NewHandlers(repo)
