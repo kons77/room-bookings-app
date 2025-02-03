@@ -1,11 +1,44 @@
 {{template "base" .}} 
 
+{{define "css"}}
+  <style>
+
+    img {
+      float: right;
+      margin-left: 10px; /* Добавляет отступ между текстом и картинкой */
+      max-width: 300px; /* Ограничивает ширину изображения */
+    }
+    
+    p {
+      text-align: justify; /* Выравнивает текст по ширине */
+    }
+
+  </style>
+{{end}}
 
 {{define "content"}}
+
+
+
     <div class="container">
-      <div class="raw">
+      <div class="row">
         <div class="col">
-          <h1>This is the about page</h1>
+          <h1>About Forth Smith</h1>
+          <hr>
+
+          <p>
+            <img src="/static/images/outside.png" alt="Forth Smith outside">
+
+            Nestled in the embrace of time, where shadows whisper secrets of the past, lies Fort Smythe Bed and Breakfast—a haven where history and mystery entwine, weaving a tale that lingers in the still air. Here, beneath the weight of centuries, every worn floorboard and weathered beam breathes with the echoes of those who came before, their presence felt in the hush of candlelit corridors and the murmurs of the wind that caresses the eaves. The house stands not merely as a structure of wood and stone but as a living chronicle of forgotten moments—of whispered confessions, silent prayers, and dreams that once stirred beneath its sheltering roof. To step across its threshold is to step into another world, one where time moves like the slow drift of autumn leaves and the past is never truly past.
+          </p>
+          <p>
+            The air within carries the scent of aged parchment and fading embers, a reminder of long-lost letters sealed with trembling hands and fires that once flickered against the cold of endless nights. The walls, adorned with relics of a proud yet wistful age, seem to lean in as if eager to share their secrets with those who dare to listen. Shadows stretch long in the glow of lanternlight, dancing across antique furnishings and heavy draperies that stir with unseen movement, as if the house itself inhales and exhales with the rhythm of those who find refuge within its depths. Here, silence is never empty—it is filled with the rustle of unseen pages turning, the sigh of old spirits lingering in forgotten corners, and the distant echoes of footsteps that may not belong to the living.
+          </p>
+
+          <p>
+            Outside, the world beyond the gate is swallowed by mist, shifting and restless like a veil between realms. The morning light, pale and spectral, spills over the grounds in ghostly ribbons, casting long shadows across the cobbled path that leads to the entrance. At dusk, twilight drapes the house in a solemn hush, turning its towering silhouette into a dark sentinel against the sky. It is in these quiet hours that Fort Smythe becomes more than a place—it becomes a feeling, a presence, an entity unto itself, standing watch over those who find solace in its embrace. For the weary traveler, it is a sanctuary; for the dreamer, a realm of endless possibility; and for those who understand the language of the past, it is a whispering companion, ever waiting, ever watching, ever welcoming.
+          </p>
+
         </div>
       </div>
     </div>  
