@@ -1,6 +1,6 @@
 # Bookings and Reservations 
 
-This is the repository for the bookings and reservationg project doing on Trevor Sawler's course "Building Modern Web Applications with Go (Golang)"
+This is the repository for the bookings and reservationg project doing on Trevor Sawler's course ["Building Modern Web Applications with Go (Golang)"](https://www.udemy.com/course/building-modern-web-applications-with-go/)
 (go-modern-web-app) 
 
 ### Technical Stack
@@ -20,8 +20,13 @@ This is the repository for the bookings and reservationg project doing on Trevor
 - [Sweet Alerts 2](https://sweetalert2.github.io/#download) - pop-up dialogs
 - [Go Simple Mail](https://github.com/xhit/go-simple-mail) - sending emails
 - [simple-datatables](https://github.com/fiduswriter/simple-datatables) - data grid
-- [RoyalUI-Free-Bootstrap-Admin-Template](https://github.com/BootstrapDash/RoyalUI-Free-Bootstrap-Admin-Template) - admin template
+
 
 ### Additional tools 
 - [MailHog](https://github.com/mailhog/MailHog) - dummy local mail server 
 - [Foundation for Emails 2](https://get.foundation/emails.html) - email templates
+- [RoyalUI-Admin-Template](https://github.com/BootstrapDash/RoyalUI-Free-Bootstrap-Admin-Template) - admin template
+
+### Course certificate
+
+![certificate](docs/cert.jpg)

@@ -541,7 +541,7 @@ func (m *Repository) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 	render.Template(w, r, "admin-dashboard.page.tmpl", &models.TemplateData{})
 }
 
-// ! AdminReservationsGrid shows all or new reservations in admin tool depends on src
+// AdminReservationsGrid shows all or new reservations in admin tool depends on src
 func (m *Repository) AdminReservationsGrid(w http.ResponseWriter, r *http.Request) {
 	exploded := strings.Split(r.RequestURI, "/")
 	src := exploded[3]
@@ -568,40 +568,6 @@ func (m *Repository) AdminReservationsGrid(w http.ResponseWriter, r *http.Reques
 		Data:      data,
 	})
 }
-
-/*
-// AdminAllReservations shows all reservations in admin tool
-func (m *Repository) AdminAllReservations(w http.ResponseWriter, r *http.Request) {
-	reservations, err := m.DB.AllReservations()
-	if err != nil {
-		helpers.ServerError(w, err)
-		return
-	}
-
-	data := make(map[string]interface{})
-	data["reservations"] = reservations
-
-	render.Template(w, r, "admin-all-reservations.page.tmpl", &models.TemplateData{
-		Data: data,
-	})
-}*/
-
-/*
-// AdminNewReservations shows all new reservations in admin tool
-func (m *Repository) AdminNewReservations(w http.ResponseWriter, r *http.Request) {
-	reservations, err := m.DB.AllNewReservations()
-	if err != nil {
-		helpers.ServerError(w, err)
-		return
-	}
-
-	data := make(map[string]interface{})
-	data["reservations"] = reservations
-
-	render.Template(w, r, "admin-new-reservations.page.tmpl", &models.TemplateData{
-		Data: data,
-	})
-}*/
 
 // AdminShowReservation shows the reservation in the admin tool
 func (m *Repository) AdminShowReservation(w http.ResponseWriter, r *http.Request) {
@@ -918,4 +884,43 @@ func (m *Repository) AdminPostReservationsCalendar(w http.ResponseWriter, r *htt
 
 	m.App.Session.Put(r.Context(), "flash", "Changed saved")
 	http.Redirect(w, r, fmt.Sprintf("/admin/reservations/cal?y=%d&m=%d", year, month), http.StatusSeeOther)
+}
+
+// AdminHashPassword displays generate hashed password page
+func (m *Repository) AdminHashPassword(w http.ResponseWriter, r *http.Request) {
+
+	render.Template(w, r, "admin-hash-pswd.page.tmpl", &models.TemplateData{
+		Form: forms.New(nil),
+	})
+}
+
+// AdminPostHashPassword generate hashed password from the string
+func (m *Repository) AdminPostHashPassword(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	form := forms.New(r.PostForm)
+	form.Required("password")
+
+	if !form.Valid() {
+		m.App.Session.Put(r.Context(), "flash", "Password cannot be empty!")
+		http.Redirect(w, r, "/admin/generate-hashed-password", http.StatusSeeOther)
+		return
+	}
+
+	pswd := r.Form.Get("password")
+
+	hashedPswr, err := helpers.HashPassword(pswd)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	log.Println(string(hashedPswr))
+
+	m.App.Session.Put(r.Context(), "flash", "Hash is generated!")
+	http.Redirect(w, r, "/admin/generate-hashed-password", http.StatusSeeOther)
 }

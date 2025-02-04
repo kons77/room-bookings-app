@@ -18,3 +18,9 @@ Here's Go's interesting approach to parsing strings into time objects and format
 Trevor Sawler: Like pretty much any client side data table/data grid library (and there are many to choose from) requires that you implement your own code to do the server side pagination and such. The entire purpose of the JS library is to make implementing the front end code easier. That's it.
 
 I did a similar thing with the original datatables (the one that depends on jQuery). You can see [a gist of the code here](https://gist.github.com/tsawler/0b46ff84ef774eb381581550111c53cf), which might be a good starting point, at least.
+
+
+
+[Microservices in Golang by Evan Valentine](https://web.archive.org/web/20200612085536/https://ewanvalentine.io/microservices-in-golang-part-1/) 
+
+[Go gRPC Beginners Tutorial](https://tutorialedge.net/golang/go-grpc-beginners-tutorial/)

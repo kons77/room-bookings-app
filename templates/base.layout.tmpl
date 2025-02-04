@@ -7,6 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fort Smyth Bed and Breakfast</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <!-- Bootstrap Icons  -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.3.4/dist/css/datepicker-bs5.min.css">
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/notie/dist/notie.min.css">
     <link rel="stylesheet" type="text/css" href="/static/css/styles.css">
@@ -52,8 +54,9 @@
                             Admin
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="/admin/dashboard">Dashboard</a></li> <!-- /rooms/generals-quarters -->
-                            <li><a class="dropdown-item" href="/user/logout">Logout</a></li> <!-- /rooms/majors-suite -->
+                            <li><a class="dropdown-item" href="/admin/dashboard">Dashboard</a></li>
+                            <li><a class="dropdown-item" href="/admin/generate-hashed-password">Generate hashed password</a></li>
+                            <li><a class="dropdown-item" href="/user/logout">Logout</a></li> 
                         </ul>
                     </li>
                 {{else}}
@@ -159,7 +162,30 @@
         notify("{{.}}", "warning")
     {{end}}
 
-    
+    document.addEventListener("DOMContentLoaded", function () {
+        const passwordInput = document.getElementById("password");
+        const toggleButton = document.getElementById("togglePassword");
+        const icon = toggleButton.querySelector("i");
+
+        toggleButton.addEventListener("mousedown", function () {
+            passwordInput.type = "text";
+            icon.classList.remove("bi-eye");
+            icon.classList.add("bi-eye-slash");
+        });
+
+        toggleButton.addEventListener("mouseup", function () {
+            passwordInput.type = "password";
+            icon.classList.remove("bi-eye-slash");
+            icon.classList.add("bi-eye");
+        });
+
+        toggleButton.addEventListener("mouseleave", function () {
+            passwordInput.type = "password";
+            icon.classList.remove("bi-eye-slash");
+            icon.classList.add("bi-eye");
+        });
+    });
+        
 </script>
 
 </body>

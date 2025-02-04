@@ -6,6 +6,7 @@ import (
 	"runtime/debug"
 
 	"github.com/kons77/room-bookings-app/internal/config"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var app *config.AppConfig
@@ -30,4 +31,13 @@ func ServerError(w http.ResponseWriter, err error) {
 func IsAuthenticated(r *http.Request) bool {
 	exists := app.Session.Exists(r.Context(), "user_id")
 	return exists
+}
+
+func HashPassword(pswd string) ([]byte, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(pswd), 12)
+	if err != nil {
+		return nil, err
+	}
+
+	return hashedPassword, nil
 }
