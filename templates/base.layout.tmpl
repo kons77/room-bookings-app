@@ -162,29 +162,7 @@
         notify("{{.}}", "warning")
     {{end}}
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const passwordInput = document.getElementById("password");
-        const toggleButton = document.getElementById("togglePassword");
-        const icon = toggleButton.querySelector("i");
-
-        toggleButton.addEventListener("mousedown", function () {
-            passwordInput.type = "text";
-            icon.classList.remove("bi-eye");
-            icon.classList.add("bi-eye-slash");
-        });
-
-        toggleButton.addEventListener("mouseup", function () {
-            passwordInput.type = "password";
-            icon.classList.remove("bi-eye-slash");
-            icon.classList.add("bi-eye");
-        });
-
-        toggleButton.addEventListener("mouseleave", function () {
-            passwordInput.type = "password";
-            icon.classList.remove("bi-eye-slash");
-            icon.classList.add("bi-eye");
-        });
-    });
+    
         
 </script>
 

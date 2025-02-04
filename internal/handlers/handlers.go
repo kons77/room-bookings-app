@@ -888,7 +888,6 @@ func (m *Repository) AdminPostReservationsCalendar(w http.ResponseWriter, r *htt
 
 // AdminHashPassword displays generate hashed password page
 func (m *Repository) AdminHashPassword(w http.ResponseWriter, r *http.Request) {
-
 	render.Template(w, r, "admin-hash-pswd.page.tmpl", &models.TemplateData{
 		Form: forms.New(nil),
 	})
@@ -906,21 +905,31 @@ func (m *Repository) AdminPostHashPassword(w http.ResponseWriter, r *http.Reques
 	form.Required("password")
 
 	if !form.Valid() {
-		m.App.Session.Put(r.Context(), "flash", "Password cannot be empty!")
-		http.Redirect(w, r, "/admin/generate-hashed-password", http.StatusSeeOther)
+		// send json response
+		resp := map[string]string{
+			"error": "Password cannot be empty!",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(resp)
 		return
 	}
 
 	pswd := r.Form.Get("password")
 
-	hashedPswr, err := helpers.HashPassword(pswd)
+	hashedPswd, err := helpers.HashPassword(pswd)
 	if err != nil {
 		helpers.ServerError(w, err)
 		return
 	}
 
-	log.Println(string(hashedPswr))
+	resp := map[string]string{
+		"HashedPswd": string(hashedPswd),
+	}
 
-	m.App.Session.Put(r.Context(), "flash", "Hash is generated!")
-	http.Redirect(w, r, "/admin/generate-hashed-password", http.StatusSeeOther)
+	// send json response
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resp) // writes directly to http.ResponseWriter: No need for intermediate variables.
+
 }
