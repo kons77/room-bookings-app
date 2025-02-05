@@ -28,39 +28,32 @@ var infoLog *log.Logger
 var errorLog *log.Logger
 
 // DBCfgAlt holds database.yml - temp type until db yml cfg move to app.Config
-type DBCfgAlt struct {
+type yamlConfig struct {
 	Development struct {
 		Dialect  string `yaml:"dialect"`
 		Database string `yaml:"database"`
 		User     string `yaml:"user"`
 		Password string `yaml:"password"`
 		Host     string `yaml:"host"`
+		Port     string `yaml:"port"`
 		Pool     int    `yaml:"pool"`
 	} `yaml:"development"`
-	/*
-		Test struct {
-			URL string `yaml:"url"`
-		} `yaml:"test"`
-		Production struct {
-			URL string `yaml:"url"`
-		} `yaml:"production"`
-	*/
 }
 
-// getPasswordFromYaml reads password from database.yml - temp fucn until db yml cfg move to app.Config
-func getPasswordFromYaml() (string, error) {
+// loadYamlConfig loads settings from database.yml
+func loadYamlConfig() (yamlConfig, error) {
+	var yConfig yamlConfig
 	data, err := os.ReadFile("database.yml")
 	if err != nil {
-		return "", err
+		return yConfig, err
 	}
 
-	var cfg DBCfgAlt
-	err = yaml.Unmarshal(data, &cfg)
+	err = yaml.Unmarshal(data, &yConfig)
 	if err != nil {
-		return "", err
+		return yConfig, err
 	}
 
-	return cfg.Development.Password, nil
+	return yConfig, nil
 }
 
 // main is the main application function
@@ -88,37 +81,63 @@ func main() {
 
 func run() (*driver.DB, error) {
 
-	// Register custom types for session storage // what am I going to put in the session
+	// register custom types for session storage (these types will be stored in the session)
 	gob.Register(models.Reservation{})
 	gob.Register(models.User{})
 	gob.Register(models.Room{})
 	gob.Register(models.Restriction{})
 	gob.Register(map[string]int{})
 
+	// load settings from the YAML configuration file
+	dbConfig, err := loadYamlConfig()
+	if err != nil {
+		log.Println("Cannot read yaml file", err)
+	}
+
 	// read flags
 	inProduction := flag.Bool("production", true, "Application is in production")
 	useCache := flag.Bool("cache", true, "Use template cache")
-	// read this from yaml file by func getPasswordFromYaml() to struct DBCfgAlt
 	dbHost := flag.String("dbhost", "127.0.0.1", "Database host") // localhost
 	dbName := flag.String("dbname", "", "Database name")
 	dbUser := flag.String("dbuser", "", "Database user")
 	dbPswd := flag.String("dbpswd", "", "Database password")
-	dbPort := flag.String("dbport", "5432", "Database port")
+	dbPort := flag.String("dbport", "", "Database port")
 	dbSSL := flag.String("dbssl", "disable", "Database SSL settings (disable, prefer, require)")
 
 	flag.Parse()
 
-	_ = *dbPswd //
+	// Override YAML settings with flag values (if provided)
+	if *dbHost != "127.0.0.1" {
+		dbConfig.Development.Host = *dbHost
+	}
+	if *dbName != "" {
+		dbConfig.Development.Database = *dbName
+	}
+	if *dbUser != "" {
+		dbConfig.Development.User = *dbUser
+	}
+	if *dbPswd != "" {
+		dbConfig.Development.Password = *dbPswd
+	}
+	if *dbPort != "" {
+		dbConfig.Development.Port = *dbPort
+	}
 
-	if *dbName == "" || *dbUser == "" {
-		fmt.Println("Missing required flags")
+	// check if required database parameters exist in YAML or flags
+	if dbConfig.Development.Database == "" || dbConfig.Development.User == "" {
+		fmt.Println("Missing required database configuration: username or database name")
 		os.Exit(1)
 	}
 
-	mailChan := make(chan models.MailData)
-	app.MailChan = mailChan
+	connectionString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
+		dbConfig.Development.Host,
+		dbConfig.Development.Port,
+		dbConfig.Development.Database,
+		dbConfig.Development.User,
+		dbConfig.Development.Password,
+		*dbSSL)
 
-	//
+	// set up application configuration and logging
 	app.InProduction = *inProduction
 	app.UseCache = *useCache
 
@@ -128,35 +147,29 @@ func run() (*driver.DB, error) {
 	errorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 	app.ErrorLog = errorLog
 
-	session = scs.New() // := instead of = creates `variable shadowing` because session is declare out of func
+	// set up session management
+	session = scs.New() // Using := instead of = would cause variable shadowing, as session is declared outside this function
 	session.Lifetime = 24 * time.Hour
-	session.Cookie.Persist = true                  // save after closing browser
-	session.Cookie.SameSite = http.SameSiteLaxMode // how strict
-	// Secure - insist the cookie to be encrypted - set true in production, for https
-	session.Cookie.Secure = false //app.InProduction
+	session.Cookie.Persist = true                  // persist session data after the browser is closed
+	session.Cookie.SameSite = http.SameSiteLaxMode // define cookie SameSite policy
+	session.Cookie.Secure = app.InProduction       // insist the cookie to be encrypted - set true in production, for https
 
 	app.Session = session
 
 	// connect to db
 	log.Println("Connecting to database... ")
 
-	// ! rewrite to Load defaults from yaml (test and production) - but override with flags if provided
-	pswd, err := getPasswordFromYaml()
-	// log.Println(pswd, err)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	connectionString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=%s", *dbHost, *dbPort, *dbName, *dbUser, pswd, *dbSSL)
-
-	// ! rewrite to Load defaults from yaml (test and production) - but override with flags if provided
 	db, err := driver.ConnectSQL(connectionString)
 	if err != nil {
 		log.Fatal("Cannot connet to database! Dying...")
 	}
-	// defer db.SQL.Close() - it must be not here but in main function
+	// do not defer db.SQL.Close() here; it should be in the main function
 	log.Println("Connected to database")
 
+	mailChan := make(chan models.MailData)
+	app.MailChan = mailChan
+
+	// create and load the template cache
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
 		log.Fatal("cannot create template cache")
@@ -171,21 +184,3 @@ func run() (*driver.DB, error) {
 
 	return db, nil
 }
-
-/* send_email_standard sends email using standart go library package - we do not use it
-func send_email_standart() {
-	from := "me@here.com"
-	pswd := ""
-	mailserver := "localhost"
-	where := []string{
-		"you@there.com",
-	}
-	msgContent := []byte("Hello, world")
-
-	// credentials of mailserver
-	auth := smtp.PlainAuth("", from, pswd, mailserver)
-	err := smtp.SendMail("localhost:1025", auth, from, where, msgContent)
-	if err != nil {
-		log.Println("somethings goes wrong", err)
-	}
-}*/
