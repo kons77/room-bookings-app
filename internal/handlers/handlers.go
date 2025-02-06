@@ -831,8 +831,15 @@ func (m *Repository) AdminPostReservationsCalendar(w http.ResponseWriter, r *htt
 		return
 	}
 
-	year, _ := strconv.Atoi(r.Form.Get("y"))
-	month, _ := strconv.Atoi(r.Form.Get("m"))
+	year := time.Now().Year()
+	month := int(time.Now().Month())
+	// if y or m parameters in cal?y=__&m=__ are not int
+	if y, err := strconv.Atoi(r.Form.Get("y")); err == nil {
+		year = y
+	}
+	if m, err := strconv.Atoi(r.Form.Get("m")); err == nil {
+		month = m
+	}
 
 	// process blocks
 	rooms, err := m.DB.AllRooms()

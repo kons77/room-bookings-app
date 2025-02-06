@@ -26,7 +26,7 @@ This is the repository for the bookings and reservationg project doing on Trevor
 - [MailHog](https://github.com/mailhog/MailHog) - dummy local mail server 
 - [Foundation for Emails 2](https://get.foundation/emails.html) - email templates
 - [RoyalUI-Admin-Template](https://github.com/BootstrapDash/RoyalUI-Free-Bootstrap-Admin-Template) - admin template
-- [tparce](github.com/mfridman/tparse) - analyzing and summarizing go test output
+- [tparce](https://github.com/mfridman/tparse) - analyzing and summarizing go test output
 
 ### Course certificate
 
