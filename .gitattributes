@@ -1,4 +1,4 @@
 # Exclude directories from GitHub language stats
-static/admin/ linguist-vendored
-email-templates/ linguist-vendored
-html-source/ linguist-vendored
+static/admin/* linguist-vendored
+email-templates/* linguist-vendored
+html-source/* linguist-vendored
