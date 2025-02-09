@@ -678,8 +678,15 @@ func (m *Repository) AdminReservationsCalendar(w http.ResponseWriter, r *http.Re
 	now = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 
 	if r.URL.Query().Get("y") != "" {
-		year, _ := strconv.Atoi(r.URL.Query().Get("y"))
-		month, _ := strconv.Atoi(r.URL.Query().Get("m"))
+		// if y or m parameters in cal?y=__&m=__ are not int
+		year, err := strconv.Atoi(r.URL.Query().Get("y"))
+		if err != nil {
+			year = time.Now().Year()
+		}
+		month, err := strconv.Atoi(r.URL.Query().Get("m"))
+		if err != nil {
+			month = int(time.Now().Month())
+		}
 		now = time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
 	}
 
