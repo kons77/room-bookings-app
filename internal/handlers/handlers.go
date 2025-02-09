@@ -686,7 +686,7 @@ func (m *Repository) AdminReservationsCalendar(w http.ResponseWriter, r *http.Re
 	data := make(map[string]interface{})
 	data["now"] = now
 
-	next := now.AddDate(0, 1, 0) //!!  on 2025-01-30 it gives me march instead of february - FIX
+	next := now.AddDate(0, 1, 0) //!!  on 2025-01-30 it gives me march instead of february - FIXED
 	last := now.AddDate(0, -1, 0)
 
 	nextMonth := next.Format("01")

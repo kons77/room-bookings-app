@@ -27,7 +27,7 @@ var session *scs.SessionManager
 var infoLog *log.Logger
 var errorLog *log.Logger
 
-// DBCfgAlt holds database.yml - temp type until db yml cfg move to app.Config
+// yamlConfig holds database.yml - temp type until db yml cfg move to app.Config
 type yamlConfig struct {
 	Development struct {
 		Dialect  string `yaml:"dialect"`

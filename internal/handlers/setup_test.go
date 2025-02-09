@@ -130,6 +130,8 @@ func getRoutes() http.Handler {
 	mux.Get("/admin/delete-reservation/{src}/{id}/do", Repo.AdminDeleteReservation)
 	mux.Get("/admin/reservations/{src}/{id}/show", Repo.AdminShowReservation)
 	mux.Post("/admin/reservations/{src}/{id}", Repo.AdminPostShowReservation)
+	mux.Get("/generate-hashed-password", Repo.AdminHashPassword)
+	mux.Post("/generate-hashed-password", Repo.AdminPostHashPassword)
 
 	return mux
 

@@ -1,7 +1,6 @@
 # Bookings and Reservations 
 
-This is the repository for the bookings and reservationg project doing on Trevor Sawler's course ["Building Modern Web Applications with Go (Golang)"](https://www.udemy.com/course/building-modern-web-applications-with-go/)
-(go-modern-web-app) 
+This is the repository for the bookings and reservationg project built while following Trevor Sawler's course ["Building Modern Web Applications with Go (Golang)"](https://www.udemy.com/course/building-modern-web-applications-with-go/) (go-modern-web-app) 
 
 ### Technical Stack
 - Built with Go version 1.23.3
