@@ -7,7 +7,7 @@ Here's Go's interesting approach to parsing strings into time objects and format
 
 [Advice for new Go Programmers by Ewan Valentine](https://ewanvalentine.io/blog/advice-for-new-go-programmers) key tips and recommendations from Ewan Valentine for newcomers learning the Golang.
 
-
+[Mocking database or use a test database](https://www.reddit.com/r/golang/comments/u62emg/mocking_database_or_use_a_test_database/) great reddit topic 
 
 [The Repository pattern in Go: a painless way to simplify your service logic](https://threedots.tech/post/repository-pattern-in-go/)
 
